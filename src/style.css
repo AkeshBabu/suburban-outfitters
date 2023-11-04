@@ -137,31 +137,88 @@ footer i {
 /* Register Page */
 
 .registration-form {
-    border: 2px solid #dee2e6;
-    border-radius: 5px;
-    padding: 20px;
-    max-width: 600px;
-    margin: 50px auto;
+    border: 2px solid #dee2e6 !important;
+    border-radius: 5px !important;
+    padding: 20px !important;
+    max-width: 600px !important;
+    margin: 50px auto !important;
 }
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 15px !important;
 }
 .registration-form label {
-    margin-bottom: 5px;
+    margin-bottom: 5px !important;
 }
 .registration-form input[type="checkbox"] {
-    margin-top: 3px;
+    margin-top: 3px !important;
 }
 .registration-form button {
-    width: unset;
+    width: unset !important;
 }
 .hidden {
-    display: none;
+    display: none !important;
 }
-.btn-primary{
-    background-color: black;
+.btn-primary {
+    background-color: black !important;
 }
 
+
+/* User Profile */
+
+.profile-section, .order-history-section {
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    padding: 20px;
+}
+
+.profile-details p, .order-history li {
+    padding: 10px 0;
+}
+
+.order-history ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.order-history li a {
+    display: block;
+    padding: 10px;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: #333;
+}
+
+.order-history li a:hover {
+    background-color: #f9f9f9;
+    border-color: #ddd;
+}
+
+.profile-actions {
+    text-align: center;
+    padding-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-right: 10px;
+    border: none;
+    color: white;
+    background-color: #000000;
+}
+
+.btn-primary {
+    background-color: #000000!important;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
 
 /* Responsive styles */
 @media (max-width: 992px) {

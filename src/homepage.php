@@ -117,7 +117,7 @@
         </div>
       </div>
 
-      <div class="row" style="margin-top: 25px;">
+      <div class="row" style="margin-top: 25px; margin-left: 0px;">
         <!-- First Large Image (1/3 width) -->
         <div class="col-md-4">
           <div style="max-width: 100%;">

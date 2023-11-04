@@ -132,6 +132,37 @@ footer i {
     padding: 0.25rem 1.80rem;
 }
 
+
+
+/* Register Page */
+
+.registration-form {
+    border: 2px solid #dee2e6;
+    border-radius: 5px;
+    padding: 20px;
+    max-width: 600px;
+    margin: 50px auto;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.registration-form label {
+    margin-bottom: 5px;
+}
+.registration-form input[type="checkbox"] {
+    margin-top: 3px;
+}
+.registration-form button {
+    width: unset;
+}
+.hidden {
+    display: none;
+}
+.btn-primary{
+    background-color: black;
+}
+
+
 /* Responsive styles */
 @media (max-width: 992px) {
     .navbar h1 {

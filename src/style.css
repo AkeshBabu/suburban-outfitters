@@ -1,6 +1,6 @@
 /* General Styles */
 body {
-    font-family: 'Montserrat';
+    font-family: 'Montserrat'!important;
 }
 
 /* Header Styles */
@@ -24,6 +24,10 @@ header {
 
 .navbar-brand {
     font-weight: bold;
+}
+
+.navbar-nav{
+    flex-direction: inherit;
 }
 
 header h1 {

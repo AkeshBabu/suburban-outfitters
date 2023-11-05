@@ -30,7 +30,7 @@
             </form>
           </li>
           <li id="profileIcon" class="nav-item">
-            <a class="nav-link" href="profile.php">
+            <a class="nav-link" href="login.php">
               <img src="https://cdn-icons-png.flaticon.com/128/64/64572.png" width="30px" height="30px">
             </a>
           </li>

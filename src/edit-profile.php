@@ -84,7 +84,7 @@
     <div class="container">
         <h2 class="text-center">Update your Profile</h2>
         <div class="registration-form">
-            <form action="update-profile.php" method="post">
+            <form action="edit-profile.php" method="post">
                 <div class="form-group">
                     <label for="fname">First Name:</label>
                     <input type="text" class="form-control" id="fname" name="fname" required>
@@ -156,7 +156,7 @@
                         required>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-                    <button onclick="location.href='profile.php'" type="submit" class="btn btn-primary">Update
+                    <button type="submit" class="btn btn-primary">Update
                         Password</button>
                     <button id="cancleBtn" style="display: block;" type="button" class="btn btn-primary"
                         onclick="location.href='profile.php'">Cancel</button>

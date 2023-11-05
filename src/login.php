@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -41,11 +41,16 @@
         .btn-primary {
             background-color: black !important;
         }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 2rem;
+        }
     </style>
 </head>
 
 <body>
-
+    <!-- Header section with navigation bar -->
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container-fluid">
@@ -62,7 +67,7 @@
                         </form>
                     </li>
                     <li id="profileIcon" class="nav-item">
-                          <a class="nav-link" href="login.php">
+                        <a class="nav-link" href="login.php">
                             <img src="https://cdn-icons-png.flaticon.com/128/64/64572.png" width="30px" height="30px">
                         </a>
                     </li>
@@ -79,20 +84,12 @@
     <div class="container">
         <br>
         <br>
-        <h2 class="text-center">Register Today</h2>
+        <h2 class="text-center">Login</h2>
         <div class="registration-form">
 
 
-            <form action="register.php" method="post">
+            <form action="login.php" method="post">
                 <div class="form-group">
-                    <label for="fname">First Name:</label>
-                    <input type="text" class="form-control" id="fname" name="fname" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="lname">Last Name:</label>
-                    <input type="text" class="form-control" id="lname" name="lname" required>
-                </div>
 
                 <div class="form-group">
                     <label for="email">Email:</label>
@@ -100,54 +97,22 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="phone">Phone Number:</label>
-                    <input type="tel" class="form-control" id="phone" name="phone" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="address">Full Shipping Address:</label>
-                    <input type="text" class="form-control" id="address" name="address" required>
-                </div>
-
-                <div class="form-group">
-                    <input type="checkbox" id="emailOptIn" name="emailOptIn">
-                    <label for="emailOptIn">Subscribe to Newsletter</label>
-                </div>
-
-                <div class="form-group">
-                    <input type="checkbox" id="sameAddress" name="sameAddress" checked
-                        onchange="toggleBillingAddress()">
-                    <label for="sameAddress">Billing and Shipping Address are the same</label>
-                </div>
-
-                <!-- Billing Address Fields, initially hidden -->
-                <div id="billingAddress" class="hidden">
-                    <div class="form-group">
-                        <label for="billingAddress">Full Billing Address:</label>
-                        <input type="text" class="form-control" id="billingAddress" name="billingAddress">
-                    </div>
-                </div>
-
-                <div class="form-group">
                     <label for="pwd">Password:</label>
                     <input type="password" class="form-control" id="pwd" name="pwd" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="cpwd">Confirm Password:</label>
-                    <input type="password" class="form-control" id="cpwd" name="cpwd" required>
-                </div>
 
-                <button type="submit" class="btn btn-primary">Sign Up</button>
+                <button type="submit" class="btn btn-primary" onclick="location.href='profile.php'">Login</button>
                 <br><br>
-                <p style="display: flex;"> Already have an account with us?
-                    <button style="margin-left: 25px; margin-top: -6px;" type="submit"
-                        class="btn btn-primary" onclick="location.href='login.php'">Login</button>
+                <p style="display: flex; margin-top: 11px;"> Not yet registered with us?
+                    <button style="margin-left: 25px; margin-top: -8px;" type="submit"
+                            class="btn btn-primary" onclick="location.href='register.php'">Sign Up</button>
                 </p>
 
 
             </form>
         </div>
+    </div>
     </div>
 
 
@@ -173,29 +138,10 @@
     </footer>
 
 
-
-    <script>
-        function toggleBillingAddress() {
-            var billingAddressDiv = document.getElementById('billingAddress');
-            var sameAddressCheckbox = document.getElementById('sameAddress');
-            billingAddressDiv.style.display = sameAddressCheckbox.checked ? 'none' : 'block';
-        }
-
-        window.onload = function () {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('registered') === 'true') {
-                //  popup message
-                alert('Successfully registered');
-                history.replaceState(null, '', 'homepage.php');
-            }
-        };
-    </script>
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </body>
-
 </html>

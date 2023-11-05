@@ -136,7 +136,7 @@
 
         <!-- Update and Delete Profile Buttons -->
         <div class="profile-actions">
-            <button onclick="location.href='update-profile.php'" class="btn btn-primary">Update Profile</button>
+            <button onclick="location.href='edit-profile.php'" class="btn btn-primary">Update Profile</button>
             <button onclick="confirmDelete()" class="btn btn-danger">Delete Profile</button>
         </div>
     </div>

@@ -217,9 +217,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
         </div>
     </div>
 
+<<<<<<< HEAD
     <br>
     <br>
     
+=======
+
+>>>>>>> 33965f3cbcdc9ecc8ae1e7c4c03a4152103324c9
     <!-- Footer -->
     <footer>
         <div class="container py-4" style="text-align: center;">

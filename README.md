@@ -32,7 +32,11 @@ Make sure you have the following prerequisites installed:
 
 1. Launch your PHPMyAdmin from your web server's control panel.
 2. Create a new database named `suburban-outfitters-db`.
+<<<<<<< HEAD
 3. Import the database dump file provided with the project into the `suburban-outfitters-db` database. You can find the SQL file in the project's 'src/db' directory.
+=======
+3. Import the database dump file provided with the project into the `suburban-outfitters-db` database. You can find the SQL file in the project's root directory.
+>>>>>>> 33965f3cbcdc9ecc8ae1e7c4c03a4152103324c9
 4. Update the database configuration in the `config.php` file to match your PHPMyAdmin settings (check `conn.php` for default config.) (e.g., database name, username, password).
 
 ## Usage

@@ -1,124 +1,218 @@
 <?php
 require_once 'conn.php';
+require_once 'checksession.php';
 
-function sanitizeMySQL($connection, $var)
-{
-    $var = strip_tags($var);
-    $var = htmlentities($var);
-    $var = stripslashes($var);
-    return $connection->real_escape_string($var);
+if (!isset($_GET['orderId']) || empty($_GET['orderId'])) {
+    die('Order ID is required.');
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Connect to the database
-    $conn = new mysqli($hn, $un, $pw, $db);
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
+$orderId = intval($_GET['orderId']);
 
-    $email = $_POST['email'];
-
-    // Check if email exists in customer or admin table
-    $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ? UNION SELECT email FROM admin WHERE email = ?");
-    $stmt->bind_param("ss", $email, $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        echo "<script>alert('Email already exists!');</script>";
-    } else {
-
-        // Sanitize and validate the data
-        $email = sanitizeMySQL($conn, $_POST['email']);
-        $password = sanitizeMySQL($conn, $_POST['pwd']);
-        $firstName = sanitizeMySQL($conn, $_POST['fname']);
-        $lastName = sanitizeMySQL($conn, $_POST['lname']);
-        $phone = sanitizeMySQL($conn, $_POST['phone']);
-        $sAddress = sanitizeMySQL($conn, $_POST['address']);
-        $bAddress = isset($_POST['sameAddress']) && $_POST['sameAddress'] ? $sAddress : sanitizeMySQL($conn, $_POST['billingAddress']);
-
-        // Hash the password
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-
-        $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
-
-        if ($result->num_rows > 0) {
-            // Email already exists
-            echo "<script>alert('Email already exists!');</script>";
-        } else {
-            // Prepare and bind
-            $stmt = $conn->prepare("INSERT INTO customer (first_name, last_name, email, password, phone, shipping_address, billing_address) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssssss", $firstName, $lastName, $email, $hashedPassword, $phone, $sAddress, $bAddress);
-
-            // Execute and check for success
-            if ($stmt->execute()) {
-                echo "<script>alert('New user added successfully!'); window.location.href='login.php';</script>";
-            } else {
-                echo "Error: " . $stmt->error;
-            }
-
-            // Close statement and connection
-            $stmt->close();
-        }
-        $conn->close();
-    }
+// Connect to the database
+$conn = new mysqli($hn, $un, $pw, $db);
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 }
+
+// Fetch order details
+$orderQuery = $conn->prepare("SELECT * FROM orders WHERE order_id = ?");
+$orderQuery->bind_param("i", $orderId);
+$orderQuery->execute();
+$orderResult = $orderQuery->get_result();
+if ($orderResult->num_rows > 0) {
+    $order = $orderResult->fetch_assoc();
+} else {
+    die("Order not found.");
+}
+
+// Fetch customer details
+$stmt = $conn->prepare("SELECT first_name, last_name, email, phone, shipping_address, billing_address FROM customer WHERE customer_id = ?");
+$stmt->bind_param("i", $order['customer_id']);
+$stmt->execute();
+$customerResult = $stmt->get_result();
+if ($customerResult->num_rows > 0) {
+    $customer = $customerResult->fetch_assoc();
+} else {
+    die("Customer details not found.");
+}
+
+// Fetch orderline details with product names
+$lineItemsQuery = $conn->prepare("SELECT product_id, quantity FROM orderline WHERE order_id = ?");
+$lineItemsQuery->bind_param("i", $orderId);
+$lineItemsQuery->execute();
+$lineItem = $lineItemsQuery->get_result()->fetch_assoc();
+
+$productIds = explode(',', $lineItem['product_id']);
+$quantities = explode(',', $lineItem['quantity']);
+
+
 ?>
 
 
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Order Receipt</title>
+    <link rel="stylesheet" href="stylesheets/style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="stylesheets/style.css">
     <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
     <style>
-        .registration-form {
-            border: 2px solid #dee2e6 !important;
-            border-radius: 5px !important;
-            padding: 20px !important;
-            max-width: 600px !important;
-            margin: 50px auto !important;
+        .profile-section,
+        .order-history-section {
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            padding: 20px;
         }
 
-        .form-group {
-            margin-bottom: 15px !important;
+        body {
+            position: relative;
         }
 
-        .registration-form label {
-            margin-bottom: 5px !important;
+        .profile-details p,
+        .order-history li {
+            padding: 10px 0;
         }
 
-        .registration-form input[type="checkbox"] {
-            margin-top: 3px !important;
+        .order-history ul {
+            list-style-type: none;
+            padding: 0;
         }
 
-        .registration-form button {
-            width: unset !important;
+        .order-history li a {
+            display: block;
+            padding: 10px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #333;
         }
 
-        .hidden {
-            display: none;
+        .order-history li a:hover {
+            background-color: #f9f9f9;
+            border-color: #ddd;
+        }
+
+        .profile-actions {
+            text-align: center;
+            padding-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-right: 10px;
+            border: none;
+            color: white;
+            background-color: #000000;
         }
 
         .btn-primary {
-            background-color: black !important;
+            background-color: #000000 !important;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        footer {
+            background-color: #24282c !important;
+            color: #fff;
+            position: relative;
+            width: 100%;
+            bottom: 0px;
+        }
+
+        .receipt-container {
+            font-family: Arial, sans-serif;
+            max-width: 950px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .receipt-header {
+            text-align: center;
+        }
+
+        .details-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .customer-details,
+        .order-details {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ddd;
+            margin: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        @media print {
+            header,
+            footer,
+            #printReceipt {
+                display: none;
+                /* Hide elements during printing */
+            }
+
+            .receipt-container {
+                width: 100%;
+            }
+        }
+
+        .receipt-container {
+            text-align: center;
+        }
+
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .receipt-header h2 {
+            margin: 0;
+            text-align: center;
+        }
+
+        .logo-container img {
+            max-height: 160px;
         }
     </style>
+
 </head>
 
 <body>
+
 
     <header>
         <nav class="navbar navbar-expand-lg navbar-light ">
@@ -154,80 +248,86 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </nav>
     </header>
 
-    <div class="container">
-        <br>
-        <br>
-        <h2 class="text-center">Register Today</h2>
-        <div class="registration-form">
+    <br>
+    <br>
 
+    <div class="receipt-container">
+        <div class="receipt-header">
+            <div style=" text-align: center; position: relative; left: 360px;">
+                <h2>Order Receipt</h2>
+            </div>
+            <div class="logo-container" style=" position: relative; left: -50px;">
+                <img src="images/logo.jpg" alt="Logo">
+            </div>
+        </div>
 
-            <form action="register.php" method="post" onsubmit="return validateForm();">
-                <div class="form-group">
-                    <label for="fname">First Name:</label>
-                    <input type="text" class="form-control" id="fname" name="fname" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="lname">Last Name:</label>
-                    <input type="text" class="form-control" id="lname" name="lname" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="text" class="form-control" id="email" name="email" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Phone Number:</label>
-                    <input type="text" class="form-control" id="phone" name="phone">
-                </div>
-
-                <div class="form-group">
-                    <label for="address">Shipping Address:</label>
-                    <input type="text" class="form-control" id="sAddress" name="address" required>
-                </div>
-
-                <div class="form-group">
-                    <input type="checkbox" id="emailOptIn" name="emailOptIn">
-                    <label for="emailOptIn">Subscribe to Newsletter</label>
-                </div>
-
-                <div class="form-group">
-                    <input type="checkbox" id="sameAddress" name="sameAddress" checked
-                        onchange="toggleBillingAddress()">
-                    <label for="sameAddress">Billing and Shipping Address are the same</label>
-                </div>
-
-                <!-- Billing Address Fields, initially hidden -->
-                <div id="billingAddress" style="display:none;">
-                    <div class="form-group">
-                        <label for="billingAddress">Billing Address:</label>
-                        <input type="text" class="form-control" id="bAddress" name="billingAddress">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="pwd">Password:</label>
-                    <input type="password" class="form-control" id="password" name="pwd" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="cpwd">Confirm Password:</label>
-                    <input type="password" class="form-control" id="cpassword" name="cpwd" required>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Sign Up</button>
-                <br><br>
-                <p style="display: flex;"> Already have an account with us?
-                    <button style="margin-left: 25px; margin-top: -6px;" type="submit" class="btn btn-primary"
-                        onclick="location.href='login.php'">Login</button>
+        <div class="details-container">
+            <div class="customer-details">
+                <h4>Customer Details:</h4>
+                <p>Name:
+                    <?php echo htmlspecialchars($customer['first_name'] . ' ' . $customer['last_name']); ?>
                 </p>
+                <p>Email:
+                    <?php echo htmlspecialchars($customer['email']); ?>
+                </p>
+                <p>Phone:
+                    <?php echo htmlspecialchars($customer['phone']); ?>
+                </p>
+                <p>Shipping Address:
+                    <?php echo htmlspecialchars($customer['shipping_address']); ?>
+                </p>
+                <p>Billing Address:
+                    <?php echo htmlspecialchars($customer['billing_address']); ?>
+                </p>
+            </div>
+            <div class="order-details">
+                <h4>Order ID:
+                    <?php echo htmlspecialchars($orderId); ?>
+                </h4>
+                <p>Date:
+                    <?php echo htmlspecialchars($order['order_date']); ?>
+                </p>
+                <table>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Price per Item</th>
+                        <th>Total Amount</th>
+                    </tr>
+                    <?php
+                    foreach ($productIds as $index => $productId) {
+                        $productQuery = $conn->prepare("SELECT product_name, price FROM products WHERE product_id = ?");
+                        $productQuery->bind_param("i", $productId);
+                        $productQuery->execute();
+                        $productResult = $productQuery->get_result();
+                        if ($product = $productResult->fetch_assoc()) {
+                            $quantity = $quantities[$index];
+                            $totalAmount = $quantity * $product['price'];
+                            echo "<tr>";
+                            echo "<td>" . htmlspecialchars($product['product_name']) . "</td>";
+                            echo "<td>" . htmlspecialchars($quantity) . "</td>";
+                            echo "<td>$" . htmlspecialchars(number_format($product['price'], 2)) . "</td>";
+                            echo "<td>$" . htmlspecialchars(number_format($totalAmount, 2)) . "</td>";
+                            echo "</tr>";
+                        }
+                    }
 
-
-            </form>
+                    ?>
+                </table>
+                <br>
+                <p>Total Order Amount: $
+                    <?php echo htmlspecialchars(number_format($order['total_amount'], 2)); ?>
+                </p>
+            </div>
+        </div>
+        <br>
+        <div style="text-align:center;">
+            <button class="btn btn-primary" id="printReceipt">Print Receipt</button>
         </div>
     </div>
 
+    <br>
+    <br>
 
     <!-- Footer -->
     <footer>
@@ -346,38 +446,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     </script>
 
-    <script>
-        function toggleBillingAddress() {
-            var billingAddressDiv = document.getElementById('billingAddress');
-            var sameAddressCheckbox = document.getElementById('sameAddress');
-            billingAddressDiv.style.display = sameAddressCheckbox.checked ? 'none' : 'block';
-        }
-
-        window.onload = function () {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('registered') === 'true') {
-                //  popup message
-                alert('Successfully registered');
-                history.replaceState(null, '', 'homepage.php');
-            }
-        };
-
-        function validateForm() {
-            var password = document.getElementById("password").value;
-            var confirmPassword = document.getElementById("cpassword").value;
-            if (password !== confirmPassword) {
-                alert("Passwords do not match.");
-                return false;
-            }
-            return true;
-        }
-    </script>
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
+
+    <script>
+        document.getElementById('printReceipt').addEventListener('click', () => {
+            window.print();
+        });
+    </script>
 </body>
 
 </html>
+
+<?php
+$conn->close();
+?>

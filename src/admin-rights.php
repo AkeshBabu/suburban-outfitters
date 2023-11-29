@@ -1,75 +1,75 @@
 <?php
+
+require_once 'checksession.php';
 require_once 'conn.php';
 
-function sanitizeMySQL($connection, $var)
-{
-    $var = strip_tags($var);
-    $var = htmlentities($var);
-    $var = stripslashes($var);
-    return $connection->real_escape_string($var);
+
+// Check if the user's email is in the admin table
+$currentUserEmail = $_SESSION['email'] ?? null;
+
+if ($currentUserEmail) {
+    $conn = new mysqli($hn, $un, $pw, $db);
+    if ($conn->connect_error)
+        die("Connection failed: " . $conn->connect_error);
+
+    $adminCheckStmt = $conn->prepare("SELECT email FROM admin WHERE email = ?");
+    $adminCheckStmt->bind_param("s", $currentUserEmail);
+    $adminCheckStmt->execute();
+    $result = $adminCheckStmt->get_result();
+
+    if ($result->num_rows == 0) {
+        // Not an admin, redirect to unauthorized page
+        header("Location: unauthorized.php");
+        exit;
+    }
+    $adminCheckStmt->close();
+} else {
+    // No user email in session, redirect to unauthorized page
+    header("Location: unauthorized.php");
+    exit;
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Connect to the database
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
+    require_once 'conn.php';
+
     $conn = new mysqli($hn, $un, $pw, $db);
-    if ($conn->connect_error) {
+    if ($conn->connect_error)
         die("Connection failed: " . $conn->connect_error);
+
+    // Get all emails from admin table
+    $adminEmails = [];
+    $adminQuery = $conn->query("SELECT email FROM admin");
+    while ($admin = $adminQuery->fetch_assoc()) {
+        $adminEmails[] = $admin['email'];
     }
 
-    $email = $_POST['email'];
-
-    // Check if email exists in customer or admin table
-    $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ? UNION SELECT email FROM admin WHERE email = ?");
-    $stmt->bind_param("ss", $email, $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        echo "<script>alert('Email already exists!');</script>";
-    } else {
-
-        // Sanitize and validate the data
-        $email = sanitizeMySQL($conn, $_POST['email']);
-        $password = sanitizeMySQL($conn, $_POST['pwd']);
-        $firstName = sanitizeMySQL($conn, $_POST['fname']);
-        $lastName = sanitizeMySQL($conn, $_POST['lname']);
-        $phone = sanitizeMySQL($conn, $_POST['phone']);
-        $sAddress = sanitizeMySQL($conn, $_POST['address']);
-        $bAddress = isset($_POST['sameAddress']) && $_POST['sameAddress'] ? $sAddress : sanitizeMySQL($conn, $_POST['billingAddress']);
-
-        // Hash the password
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-
-        $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
-
-        if ($result->num_rows > 0) {
-            // Email already exists
-            echo "<script>alert('Email already exists!');</script>";
-        } else {
-            // Prepare and bind
-            $stmt = $conn->prepare("INSERT INTO customer (first_name, last_name, email, password, phone, shipping_address, billing_address) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssssss", $firstName, $lastName, $email, $hashedPassword, $phone, $sAddress, $bAddress);
-
-            // Execute and check for success
-            if ($stmt->execute()) {
-                echo "<script>alert('New user added successfully!'); window.location.href='login.php';</script>";
-            } else {
-                echo "Error: " . $stmt->error;
-            }
-
-            // Close statement and connection
-            $stmt->close();
+    // Process each checked admin
+    $checkedAdmins = isset($_POST['admins']) ? $_POST['admins'] : [];
+    foreach ($checkedAdmins as $email) {
+        if (!in_array($email, $adminEmails)) {
+            // Add to admin if not already an admin
+            $stmt = $conn->prepare("INSERT INTO admin (first_name, last_name, email, phone) SELECT first_name, last_name, email, phone FROM customer WHERE email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
         }
-        $conn->close();
     }
+
+    // Remove unchecked admins
+    foreach ($adminEmails as $email) {
+        if (!in_array($email, $checkedAdmins)) {
+            // Remove from admin
+            $stmt = $conn->prepare("DELETE FROM admin WHERE email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+        }
+    }
+
+    $stmt->close();
+    $conn->close();
+    echo "<script>alert('Administrator updates processed successfully!'); window.location.href = 'profile.php';</script>";
 }
 ?>
-
 
 
 <!DOCTYPE html>
@@ -78,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Administrator Privileges</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="stylesheets/style.css">
@@ -108,12 +108,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             width: unset !important;
         }
 
-        .hidden {
-            display: none;
-        }
 
         .btn-primary {
             background-color: black !important;
+        }
+
+        footer {
+            background-color: #24282c !important;
+            color: #fff;
+            position: fixed;
+            width: 100%;
+            bottom: 0px;
         }
     </style>
 </head>
@@ -157,78 +162,64 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="container">
         <br>
         <br>
-        <h2 class="text-center">Register Today</h2>
+        <h2 class="text-center">Administrator Privileges</h2>
         <div class="registration-form">
 
 
-            <form action="register.php" method="post" onsubmit="return validateForm();">
-                <div class="form-group">
-                    <label for="fname">First Name:</label>
-                    <input type="text" class="form-control" id="fname" name="fname" required>
-                </div>
+            <!-- PHP Script to Fetch and Display Customers -->
+            <?php
+            require_once 'conn.php';
+            $conn = new mysqli($hn, $un, $pw, $db);
+            if ($conn->connect_error)
+                die("Connection failed: " . $conn->connect_error);
 
-                <div class="form-group">
-                    <label for="lname">Last Name:</label>
-                    <input type="text" class="form-control" id="lname" name="lname" required>
-                </div>
+            // Fetch all customers
+            $result = $conn->query("SELECT * FROM customer");
 
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="text" class="form-control" id="email" name="email" required>
-                </div>
+            echo "<form action='admin-rights.php' method='post' onsubmit='return confirmAdminChanges()'>";
+            echo "<table class='table table-bordered'>";
+            echo "<thead><tr><th>Name</th><th>Email</th><th>Select</th></tr></thead><tbody>";
 
-                <div class="form-group">
-                    <label for="phone">Phone Number:</label>
-                    <input type="text" class="form-control" id="phone" name="phone">
-                </div>
+            while ($row = $result->fetch_assoc()) {
+                $email = $row['email'];
 
-                <div class="form-group">
-                    <label for="address">Shipping Address:</label>
-                    <input type="text" class="form-control" id="sAddress" name="address" required>
-                </div>
+                // Check if the email exists in the admin table
+                $adminCheckStmt = $conn->prepare("SELECT email FROM admin WHERE email = ?");
+                $adminCheckStmt->bind_param("s", $email);
+                $adminCheckStmt->execute();
+                $adminResult = $adminCheckStmt->get_result();
+                $isAdmin = $adminResult->num_rows > 0;
 
-                <div class="form-group">
-                    <input type="checkbox" id="emailOptIn" name="emailOptIn">
-                    <label for="emailOptIn">Subscribe to Newsletter</label>
-                </div>
+                // Skip the currently logged-in admin from form processing
+                if ($email === $_SESSION['email']) {
+                    $isAdmin = true; // The currently logged-in admin remains an admin
+                }
 
-                <div class="form-group">
-                    <input type="checkbox" id="sameAddress" name="sameAddress" checked
-                        onchange="toggleBillingAddress()">
-                    <label for="sameAddress">Billing and Shipping Address are the same</label>
-                </div>
+                echo "<tr>";
+                echo "<td>" . htmlspecialchars($row['first_name']) . " " . htmlspecialchars($row['last_name']) . "</td>";
+                echo "<td>" . htmlspecialchars($email) . "</td>";
+                echo "<td><input type='checkbox' name='admins[]' value='" . htmlspecialchars($email) . "' " . ($isAdmin ? 'checked' : '') . "></td>";
+                echo "</tr>";
+            }
 
-                <!-- Billing Address Fields, initially hidden -->
-                <div id="billingAddress" style="display:none;">
-                    <div class="form-group">
-                        <label for="billingAddress">Billing Address:</label>
-                        <input type="text" class="form-control" id="bAddress" name="billingAddress">
-                    </div>
-                </div>
+            echo "</tbody></table>";
+            echo "<br>";
+            echo "<div style='display: flex; justify-content: space-between; align-items: center; margin-top: 20px;'>";
+            echo "<button type='submit' name='submit' class='btn btn-primary'>Update Privileges</button>";
+            echo "<button id='cancelBtn' style='display: block;' type='button' class='btn btn-primary' onclick=\"location.href='profile.php'\">Cancel</button>";
+            echo "</div>";
+            echo "</form>";
 
-                <div class="form-group">
-                    <label for="pwd">Password:</label>
-                    <input type="password" class="form-control" id="password" name="pwd" required>
-                </div>
+            $result->free();
+            $conn->close();
+            ?>
 
-                <div class="form-group">
-                    <label for="cpwd">Confirm Password:</label>
-                    <input type="password" class="form-control" id="cpassword" name="cpwd" required>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Sign Up</button>
-                <br><br>
-                <p style="display: flex;"> Already have an account with us?
-                    <button style="margin-left: 25px; margin-top: -6px;" type="submit" class="btn btn-primary"
-                        onclick="location.href='login.php'">Login</button>
-                </p>
-
-
-            </form>
         </div>
     </div>
 
-
+    <br>
+    <br>
+    
     <!-- Footer -->
     <footer>
         <div class="container py-4" style="text-align: center;">
@@ -347,31 +338,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </script>
 
     <script>
-        function toggleBillingAddress() {
-            var billingAddressDiv = document.getElementById('billingAddress');
-            var sameAddressCheckbox = document.getElementById('sameAddress');
-            billingAddressDiv.style.display = sameAddressCheckbox.checked ? 'none' : 'block';
-        }
-
-        window.onload = function () {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('registered') === 'true') {
-                //  popup message
-                alert('Successfully registered');
-                history.replaceState(null, '', 'homepage.php');
-            }
-        };
-
-        function validateForm() {
-            var password = document.getElementById("password").value;
-            var confirmPassword = document.getElementById("cpassword").value;
-            if (password !== confirmPassword) {
-                alert("Passwords do not match.");
-                return false;
-            }
-            return true;
+        function confirmAdminChanges() {
+            return confirm('Are you sure you want to update administrator rights?');
         }
     </script>
+
+
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>

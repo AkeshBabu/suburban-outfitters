@@ -1,15 +1,68 @@
+<?php
+
+require_once 'conn.php';
+require_once 'checksession.php';
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Suburban Outfitters</title>
+  <title>Error 404</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <link rel="stylesheet" href="stylesheets/style.css">
   <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+  <style>
+    .registration-form {
+      border: 2px solid #dee2e6 !important;
+      border-radius: 5px !important;
+      padding: 20px !important;
+      max-width: 600px !important;
+      margin: 50px auto !important;
+    }
 
+    .form-group {
+      margin-bottom: 15px !important;
+    }
+
+    .registration-form label {
+      margin-bottom: 5px !important;
+    }
+
+    .registration-form input[type="checkbox"] {
+      margin-top: 3px !important;
+    }
+
+    .registration-form button {
+      width: unset !important;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .btn-primary {
+      background-color: black !important;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 2rem;
+    }
+
+    footer {
+      background-color: #24282c !important;
+      color: #fff;
+      position: relative;
+      width: 100%;
+      bottom: 0px;
+    }
+  </style>
 </head>
 
 <body>
@@ -47,12 +100,18 @@
     </nav>
   </header>
 
-  <div class="container mt-5">
-    <div class="top10 bannerA">
-      <a href="view-products.php">
-        <img id="banner-top" alt="winter-sale" src="images/banners/banner5.jpg" width="100%">
-      </a>
+  <div class="container">
+    <br>
+    <br>
+    <div style="text-align: center;">
+
+      <h1 style="margin-top: 40px;">Unauthorized Access</h1>
+      <p>You do not have permission to view this page.</p>
+      <a href="homepage.php">Go to Home</a>
     </div>
+
+    <br>
+    <br>
 
     <!-- Carousel Begin -->
     <div class="container mt-5" style="margin-bottom: 25px;">
@@ -76,7 +135,7 @@
             echo '">';
             echo '<div class="row">';
 
-            
+           
             for ($i = 0; $i < 4; $i++) {
               // Fetch the product name from the products table based on product_id
               $productName = '';
@@ -95,7 +154,7 @@
               echo $productName . '<br>';
               echo '$' . $productPrice;
               echo '</div>';
-              $productId++;
+              $productId++; 
             }
 
             echo '</div>';
@@ -115,68 +174,7 @@
         </button>
       </div>
     </div>
-
-    <div class="row">
-      
-      <div class="col-md-6">
-        <a href="view-products.php">
-          <img src="images/banners/banner2.jpg" alt="shop-shirts" class="img-fluid">
-        </a>
-
-      </div>
-      <div class="col-md-6">
-        <a href="view-products.php">
-          <img src="images/banners/banner3.jpg" alt="shop-pants" class="img-fluid">
-        </a>
-      </div>
-
-      <div class="top10 bannerA">
-        <a href="view-products.php">
-          <img id="banner-top" alt="shop-modern-clothing" src="images/banners/banner8.jpg" width="100%">
-        </a>
-      </div>
-
-
-
-      <div class="row" style="margin-top: 25px; margin-left: 0px;">
-        <!-- First Large Image (1/3 width) -->
-        <div class="col-md-4">
-          <div style="max-width: 100%;">
-            <a href="view-products.php">
-              <img alt="Shop Unlimited" src="images/banners/banner4.jpg" width="100%">
-            </a>
-          </div>
-        </div>
-        <!-- Second Large Image (1/3 width) -->
-        <div class="col-md-4">
-          <div style="max-width: 100%;">
-            <a href="view-products.php">
-              <img alt="shop-women-collection" src="images/banners/banner6.jpg" width="100%">
-            </a>
-          </div>
-        </div>
-        <!-- Third Large Image (1/3 width) -->
-        <div class="col-md-4">
-          <div style="max-width: 100%;">
-            <a href="view-products.php">
-              <img alt="new-user-code" src="images/banners/banner7.jpg" width="100%">
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div class="top10 bannerA">
-        <a href="view-products.php">
-          <img id="banner-mid" alt="winter-sale" src="images/banners/banner1.jpg" width="100%">
-        </a>
-      </div>
-
-
-    </div>
-
   </div>
-  <br>
-  <br>
 
   
   <!-- Footer -->
@@ -295,6 +293,7 @@
       $('#myModal').modal('hide');
     }
   </script>
+
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>

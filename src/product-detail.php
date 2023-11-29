@@ -1,84 +1,10 @@
-<?php
-require_once 'conn.php';
-
-function sanitizeMySQL($connection, $var)
-{
-    $var = strip_tags($var);
-    $var = htmlentities($var);
-    $var = stripslashes($var);
-    return $connection->real_escape_string($var);
-}
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Connect to the database
-    $conn = new mysqli($hn, $un, $pw, $db);
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
-
-    $email = $_POST['email'];
-
-    // Check if email exists in customer or admin table
-    $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ? UNION SELECT email FROM admin WHERE email = ?");
-    $stmt->bind_param("ss", $email, $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        echo "<script>alert('Email already exists!');</script>";
-    } else {
-
-        // Sanitize and validate the data
-        $email = sanitizeMySQL($conn, $_POST['email']);
-        $password = sanitizeMySQL($conn, $_POST['pwd']);
-        $firstName = sanitizeMySQL($conn, $_POST['fname']);
-        $lastName = sanitizeMySQL($conn, $_POST['lname']);
-        $phone = sanitizeMySQL($conn, $_POST['phone']);
-        $sAddress = sanitizeMySQL($conn, $_POST['address']);
-        $bAddress = isset($_POST['sameAddress']) && $_POST['sameAddress'] ? $sAddress : sanitizeMySQL($conn, $_POST['billingAddress']);
-
-        // Hash the password
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-
-        $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
-
-        if ($result->num_rows > 0) {
-            // Email already exists
-            echo "<script>alert('Email already exists!');</script>";
-        } else {
-            // Prepare and bind
-            $stmt = $conn->prepare("INSERT INTO customer (first_name, last_name, email, password, phone, shipping_address, billing_address) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssssss", $firstName, $lastName, $email, $hashedPassword, $phone, $sAddress, $bAddress);
-
-            // Execute and check for success
-            if ($stmt->execute()) {
-                echo "<script>alert('New user added successfully!'); window.location.href='login.php';</script>";
-            } else {
-                echo "Error: " . $stmt->error;
-            }
-
-            // Close statement and connection
-            $stmt->close();
-        }
-        $conn->close();
-    }
-}
-?>
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Product Details</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="stylesheets/style.css">
@@ -109,11 +35,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         .btn-primary {
             background-color: black !important;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 2rem;
+        }
+
+        footer {
+            background-color: #24282c !important;
+            color: #fff;
+            position: relative;
+            width: 100%;
+            bottom: 0px;
+        }
+
+        .container {
+            width: 60%;
+        }
+
+        .product-detail-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border: 3px solid #ddd;
+            padding: 20px;
+        }
+
+        .product-detail {
+            flex: 0.5;
+            padding: 20px;
+            text-align: right;
+        }
+
+        .product-image {
+            flex: 0.5;
+            text-align: center;
+
+            padding: 10px;
+        }
+
+        .product-image img {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 0 auto;
+            display: block;
         }
     </style>
 </head>
@@ -154,81 +125,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </nav>
     </header>
 
+
     <div class="container">
-        <br>
-        <br>
-        <h2 class="text-center">Register Today</h2>
-        <div class="registration-form">
+        <br><br>
+        <h1 style="text-align:center;">Product Details</h1>
+        <br><br>
+        <div class="product-detail-container">
 
+            <div class="product-detail">
+                <?php
+                require_once 'conn.php';
 
-            <form action="register.php" method="post" onsubmit="return validateForm();">
-                <div class="form-group">
-                    <label for="fname">First Name:</label>
-                    <input type="text" class="form-control" id="fname" name="fname" required>
-                </div>
+                $conn = new mysqli($hn, $un, $pw, $db);
+                if ($conn->connect_error)
+                    die("Connection failed: " . $conn->connect_error);
 
-                <div class="form-group">
-                    <label for="lname">Last Name:</label>
-                    <input type="text" class="form-control" id="lname" name="lname" required>
-                </div>
+                // Fetch the product ID from the URL query parameter
+                $productId = isset($_GET['productId']) ? intval($_GET['productId']) : 0;
 
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="text" class="form-control" id="email" name="email" required>
-                </div>
+                if ($productId) {
+                    $stmt = $conn->prepare("SELECT * FROM products WHERE product_id = ?");
+                    $stmt->bind_param("i", $productId);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
 
-                <div class="form-group">
-                    <label for="phone">Phone Number:</label>
-                    <input type="text" class="form-control" id="phone" name="phone">
-                </div>
+                    if ($product = $result->fetch_assoc()) {
+                        echo "<h1>" . htmlspecialchars($product['product_name']) . "</h1><br>";
+                        echo "<p>Product ID: " . htmlspecialchars($product['product_id']) . "</p>";
+                        echo "<p>Category: " . htmlspecialchars($product['category']) . "</p>";
+                        echo "<h3>Price: $" . htmlspecialchars($product['price']) . "</h3><br>";
+                        echo "<form action='add-to-cart.php' method='post'>";
+                        echo "<input type='hidden' name='product_id' value='" . $product['product_id'] . "'>";
+                        echo "<label for='quantity'>Quantity: </label>";
+                        echo "<input style='margin-left:20px; width: 60px;' type='number' id='quantity' name='quantity' value='1' min='1'><br><br><br>";
+                        echo "<button type='submit'>Add to Cart</button>";
+                        echo "</form>";
+                    } else {
+                        echo "<p>Product not found.</p>";
+                    }
 
-                <div class="form-group">
-                    <label for="address">Shipping Address:</label>
-                    <input type="text" class="form-control" id="sAddress" name="address" required>
-                </div>
+                    $stmt->close();
+                } else {
+                    echo "<p>No product specified.</p>";
+                }
 
-                <div class="form-group">
-                    <input type="checkbox" id="emailOptIn" name="emailOptIn">
-                    <label for="emailOptIn">Subscribe to Newsletter</label>
-                </div>
-
-                <div class="form-group">
-                    <input type="checkbox" id="sameAddress" name="sameAddress" checked
-                        onchange="toggleBillingAddress()">
-                    <label for="sameAddress">Billing and Shipping Address are the same</label>
-                </div>
-
-                <!-- Billing Address Fields, initially hidden -->
-                <div id="billingAddress" style="display:none;">
-                    <div class="form-group">
-                        <label for="billingAddress">Billing Address:</label>
-                        <input type="text" class="form-control" id="bAddress" name="billingAddress">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="pwd">Password:</label>
-                    <input type="password" class="form-control" id="password" name="pwd" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="cpwd">Confirm Password:</label>
-                    <input type="password" class="form-control" id="cpassword" name="cpwd" required>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Sign Up</button>
-                <br><br>
-                <p style="display: flex;"> Already have an account with us?
-                    <button style="margin-left: 25px; margin-top: -6px;" type="submit" class="btn btn-primary"
-                        onclick="location.href='login.php'">Login</button>
-                </p>
-
-
-            </form>
+                $conn->close();
+                ?>
+            </div>
+            <div class="product-image">
+                <img src="images/products/<?php echo htmlspecialchars($product['product_id']); ?>.png"
+                    alt="<?php echo htmlspecialchars($product['product_name']); ?>">
+            </div>
         </div>
     </div>
+    <br>
+    <br>
 
-
+    
     <!-- Footer -->
     <footer>
         <div class="container py-4" style="text-align: center;">
@@ -345,39 +298,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $('#myModal').modal('hide');
         }
     </script>
-
     <script>
-        function toggleBillingAddress() {
-            var billingAddressDiv = document.getElementById('billingAddress');
-            var sameAddressCheckbox = document.getElementById('sameAddress');
-            billingAddressDiv.style.display = sameAddressCheckbox.checked ? 'none' : 'block';
-        }
 
-        window.onload = function () {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('registered') === 'true') {
-                //  popup message
-                alert('Successfully registered');
-                history.replaceState(null, '', 'homepage.php');
-            }
-        };
+        function addToCart(productId, price) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || {};
+            let quantity = parseInt(document.getElementById('quantity').value);
 
-        function validateForm() {
-            var password = document.getElementById("password").value;
-            var confirmPassword = document.getElementById("cpassword").value;
-            if (password !== confirmPassword) {
-                alert("Passwords do not match.");
-                return false;
+            if (!cart[productId]) {
+                cart[productId] = { quantity: quantity, price: price };
+            } else {
+                cart[productId].quantity += quantity;
             }
-            return true;
+
+            // Save the updated cart back to localStorage
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert('Product added successfully!'); window.location.href = 'homepage.php';
+            console.log("Cart:", cart); // For debugging
         }
     </script>
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
 </body>
 
 </html>

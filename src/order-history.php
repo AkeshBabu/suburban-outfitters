@@ -1,124 +1,101 @@
 <?php
-require_once 'conn.php';
-
-function sanitizeMySQL($connection, $var)
-{
-    $var = strip_tags($var);
-    $var = htmlentities($var);
-    $var = stripslashes($var);
-    return $connection->real_escape_string($var);
-}
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Connect to the database
-    $conn = new mysqli($hn, $un, $pw, $db);
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
-
-    $email = $_POST['email'];
-
-    // Check if email exists in customer or admin table
-    $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ? UNION SELECT email FROM admin WHERE email = ?");
-    $stmt->bind_param("ss", $email, $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        echo "<script>alert('Email already exists!');</script>";
-    } else {
-
-        // Sanitize and validate the data
-        $email = sanitizeMySQL($conn, $_POST['email']);
-        $password = sanitizeMySQL($conn, $_POST['pwd']);
-        $firstName = sanitizeMySQL($conn, $_POST['fname']);
-        $lastName = sanitizeMySQL($conn, $_POST['lname']);
-        $phone = sanitizeMySQL($conn, $_POST['phone']);
-        $sAddress = sanitizeMySQL($conn, $_POST['address']);
-        $bAddress = isset($_POST['sameAddress']) && $_POST['sameAddress'] ? $sAddress : sanitizeMySQL($conn, $_POST['billingAddress']);
-
-        // Hash the password
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-
-        $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
-
-        if ($result->num_rows > 0) {
-            // Email already exists
-            echo "<script>alert('Email already exists!');</script>";
-        } else {
-            // Prepare and bind
-            $stmt = $conn->prepare("INSERT INTO customer (first_name, last_name, email, password, phone, shipping_address, billing_address) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssssss", $firstName, $lastName, $email, $hashedPassword, $phone, $sAddress, $bAddress);
-
-            // Execute and check for success
-            if ($stmt->execute()) {
-                echo "<script>alert('New user added successfully!'); window.location.href='login.php';</script>";
-            } else {
-                echo "Error: " . $stmt->error;
-            }
-
-            // Close statement and connection
-            $stmt->close();
-        }
-        $conn->close();
-    }
-}
+require_once 'checksession.php';
 ?>
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Order History</title>
+    <link rel="stylesheet" href="stylesheets/style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="stylesheets/style.css">
     <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
     <style>
-        .registration-form {
-            border: 2px solid #dee2e6 !important;
-            border-radius: 5px !important;
-            padding: 20px !important;
-            max-width: 600px !important;
-            margin: 50px auto !important;
+        .profile-section,
+        .order-history-section {
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            padding: 20px;
         }
 
-        .form-group {
-            margin-bottom: 15px !important;
+        body {
+            position: relative;
         }
 
-        .registration-form label {
-            margin-bottom: 5px !important;
+        .profile-details p,
+        .order-history li {
+            padding: 10px 0;
         }
 
-        .registration-form input[type="checkbox"] {
-            margin-top: 3px !important;
+        .order-history ul {
+            list-style-type: none;
+            padding: 0;
         }
 
-        .registration-form button {
-            width: unset !important;
+        .order-history li a {
+            display: block;
+            padding: 10px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #333;
         }
 
-        .hidden {
-            display: none;
+        .order-history li a:hover {
+            background-color: #f9f9f9;
+            border-color: #ddd;
+        }
+
+        .profile-actions {
+            text-align: center;
+            padding-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-right: 10px;
+            border: none;
+            color: white;
+            background-color: #000000;
         }
 
         .btn-primary {
-            background-color: black !important;
+            background-color: #000000 !important;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        footer {
+            background-color: #24282c !important;
+            color: #fff;
+            position: fixed;
+            width: 100%;
+            bottom: 0px;
+        }
+
+        .order-history-section li {
+            display: flex;
+        }
+
+        .order-history-section li a {
+            margin-right: 60px;
+            text-align: left;
         }
     </style>
+
 </head>
 
 <body>
+
 
     <header>
         <nav class="navbar navbar-expand-lg navbar-light ">
@@ -154,81 +131,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </nav>
     </header>
 
-    <div class="container">
-        <br>
-        <br>
-        <h2 class="text-center">Register Today</h2>
-        <div class="registration-form">
+    <br>
+    <br>
 
+    <?php
 
-            <form action="register.php" method="post" onsubmit="return validateForm();">
-                <div class="form-group">
-                    <label for="fname">First Name:</label>
-                    <input type="text" class="form-control" id="fname" name="fname" required>
-                </div>
+    require_once 'conn.php';
 
-                <div class="form-group">
-                    <label for="lname">Last Name:</label>
-                    <input type="text" class="form-control" id="lname" name="lname" required>
-                </div>
+    if (isset($_SESSION['customer_id'])) {
+        $customerId = $_SESSION['customer_id'];
 
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="text" class="form-control" id="email" name="email" required>
-                </div>
+        $conn = new mysqli($hn, $un, $pw, $db);
+        if ($conn->connect_error)
+            die("Connection failed: " . $conn->connect_error);
 
-                <div class="form-group">
-                    <label for="phone">Phone Number:</label>
-                    <input type="text" class="form-control" id="phone" name="phone">
-                </div>
+        // Fetch orders for the logged-in customer
+        $stmt = $conn->prepare("SELECT * FROM orders WHERE customer_id = ?");
+        $stmt->bind_param("i", $customerId);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-                <div class="form-group">
-                    <label for="address">Shipping Address:</label>
-                    <input type="text" class="form-control" id="sAddress" name="address" required>
-                </div>
+        echo "<div class='container' style='width:100%;'>
+        <div class='order-history-section' style='text-align:center;'>
+    
+            <h2>Order History</h2>
+            <br>
+            <br>
+            <div class='order-history'>
+                <ul>";
 
-                <div class="form-group">
-                    <input type="checkbox" id="emailOptIn" name="emailOptIn">
-                    <label for="emailOptIn">Subscribe to Newsletter</label>
-                </div>
-
-                <div class="form-group">
-                    <input type="checkbox" id="sameAddress" name="sameAddress" checked
-                        onchange="toggleBillingAddress()">
-                    <label for="sameAddress">Billing and Shipping Address are the same</label>
-                </div>
-
-                <!-- Billing Address Fields, initially hidden -->
-                <div id="billingAddress" style="display:none;">
-                    <div class="form-group">
-                        <label for="billingAddress">Billing Address:</label>
-                        <input type="text" class="form-control" id="bAddress" name="billingAddress">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="pwd">Password:</label>
-                    <input type="password" class="form-control" id="password" name="pwd" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="cpwd">Confirm Password:</label>
-                    <input type="password" class="form-control" id="cpassword" name="cpwd" required>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Sign Up</button>
-                <br><br>
-                <p style="display: flex;"> Already have an account with us?
-                    <button style="margin-left: 25px; margin-top: -6px;" type="submit" class="btn btn-primary"
-                        onclick="location.href='login.php'">Login</button>
-                </p>
-
-
-            </form>
-        </div>
+        while ($order = $result->fetch_assoc()) {
+            echo "<li style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
+    <div style='text-align: left;'>
+        <div><strong>Order ID: </strong>" . $order['order_id'] . "</div>
+        <div><strong>Amount: </strong>$" . $order['total_amount'] . "</div>
+        <div><strong>Date Placed: </strong> " . $order['order_date'] . "</div>
+        <div><strong>Status: </strong> " . $order['status'] . "</div>
     </div>
+    <div style='text-align: right;'>
+    <button  onclick='showReceipt(" . $order['order_id'] . ");' style='margin-right: 40px;' class='btn btn-primary' >Show Receipt</button>
+    <button class='btn btn-danger' onclick='confirmCancel(" . $order['order_id'] . ")'>Cancel Order</button>
+  </li>";
+        }
+
+        echo "       </ul>
+            </div>
+        </div>
+    </div>";
+    }
 
 
+    $stmt->close();
+    $conn->close();
+    ?>
+
+
+    <br>
+    <br>
     <!-- Footer -->
     <footer>
         <div class="container py-4" style="text-align: center;">
@@ -346,31 +305,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     </script>
 
+
     <script>
-        function toggleBillingAddress() {
-            var billingAddressDiv = document.getElementById('billingAddress');
-            var sameAddressCheckbox = document.getElementById('sameAddress');
-            billingAddressDiv.style.display = sameAddressCheckbox.checked ? 'none' : 'block';
+        function confirmDelete() {
+            var response = confirm("Are you sure you want to delete your profile? This action cannot be undone.");
+            if (response) {
+                // profile deletion process
+                alert('Profile deletion is not available yet.');
+            }
+        }
+    </script>
+
+    <script>
+        function confirmCancel(orderId) {
+            if (confirm('Are you sure you want to cancel this order?')) {
+                window.location.href = 'cancel-order.php?orderId=' + orderId;
+            }
         }
 
-        window.onload = function () {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('registered') === 'true') {
-                //  popup message
-                alert('Successfully registered');
-                history.replaceState(null, '', 'homepage.php');
-            }
-        };
 
-        function validateForm() {
-            var password = document.getElementById("password").value;
-            var confirmPassword = document.getElementById("cpassword").value;
-            if (password !== confirmPassword) {
-                alert("Passwords do not match.");
-                return false;
-            }
-            return true;
+        function showReceipt(orderId) {
+            window.open('order-receipt.php?orderId=' + orderId, '_blank');
         }
+
     </script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>

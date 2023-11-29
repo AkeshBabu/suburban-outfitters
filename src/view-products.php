@@ -1,84 +1,10 @@
-<?php
-require_once 'conn.php';
-
-function sanitizeMySQL($connection, $var)
-{
-    $var = strip_tags($var);
-    $var = htmlentities($var);
-    $var = stripslashes($var);
-    return $connection->real_escape_string($var);
-}
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Connect to the database
-    $conn = new mysqli($hn, $un, $pw, $db);
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
-
-    $email = $_POST['email'];
-
-    // Check if email exists in customer or admin table
-    $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ? UNION SELECT email FROM admin WHERE email = ?");
-    $stmt->bind_param("ss", $email, $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        echo "<script>alert('Email already exists!');</script>";
-    } else {
-
-        // Sanitize and validate the data
-        $email = sanitizeMySQL($conn, $_POST['email']);
-        $password = sanitizeMySQL($conn, $_POST['pwd']);
-        $firstName = sanitizeMySQL($conn, $_POST['fname']);
-        $lastName = sanitizeMySQL($conn, $_POST['lname']);
-        $phone = sanitizeMySQL($conn, $_POST['phone']);
-        $sAddress = sanitizeMySQL($conn, $_POST['address']);
-        $bAddress = isset($_POST['sameAddress']) && $_POST['sameAddress'] ? $sAddress : sanitizeMySQL($conn, $_POST['billingAddress']);
-
-        // Hash the password
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-
-        $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
-
-        if ($result->num_rows > 0) {
-            // Email already exists
-            echo "<script>alert('Email already exists!');</script>";
-        } else {
-            // Prepare and bind
-            $stmt = $conn->prepare("INSERT INTO customer (first_name, last_name, email, password, phone, shipping_address, billing_address) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssssss", $firstName, $lastName, $email, $hashedPassword, $phone, $sAddress, $bAddress);
-
-            // Execute and check for success
-            if ($stmt->execute()) {
-                echo "<script>alert('New user added successfully!'); window.location.href='login.php';</script>";
-            } else {
-                echo "Error: " . $stmt->error;
-            }
-
-            // Close statement and connection
-            $stmt->close();
-        }
-        $conn->close();
-    }
-}
-?>
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Product Catalog</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="stylesheets/style.css">
@@ -109,11 +35,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         .btn-primary {
             background-color: black !important;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 2rem;
+        }
+
+        footer {
+            background-color: #24282c !important;
+            color: #fff;
+            position: relative;
+            width: 100%;
+            bottom: 0px;
+        }
+
+        a {
+            color: black;
+            text-decoration: none;
+        }
+
+        .product-card {
+            border: 3px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .product-card img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .pagination {
+            justify-content: center;
+        }
+
+        .pagination {
+            --bs-pagination-active-bg: #adb5bd !important;
+            --bs-pagination-active-border-color: black;
+            --bs-pagination-color: black;
+            --bs-pagination-hover-color: black;
         }
     </style>
 </head>
@@ -154,81 +122,93 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </nav>
     </header>
 
+    <br>
+    <br>
+
     <div class="container">
+        <h2 style="text-align:center;">Product Catalog</h2>
         <br>
-        <br>
-        <h2 class="text-center">Register Today</h2>
-        <div class="registration-form">
+        <div class="row">
+            <?php
+            require_once 'conn.php';
+
+            // Define how many products per page
+            $productsPerPage = 6;
+            $currentPage = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+            $offset = ($currentPage - 1) * $productsPerPage;
+
+            $conn = new mysqli($hn, $un, $pw, $db);
+            if ($conn->connect_error)
+                die("Connection failed: " . $conn->connect_error);
+
+            // Calculate total pages
+            $totalProducts = $conn->query("SELECT COUNT(*) FROM products")->fetch_row()[0];
+            $totalPages = ceil($totalProducts / $productsPerPage);
+
+            // Fetch products for the current page
+            $result = $conn->query("SELECT * FROM products LIMIT $productsPerPage OFFSET $offset");
+
+            // Search functionality
+            $search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
+
+            // SQL query for searching products
+            $searchQuery = "SELECT * FROM products WHERE product_name LIKE '%$search%' LIMIT $productsPerPage OFFSET $offset";
+
+            // Fetch products based on the search query
+            $result = $conn->query($searchQuery);
 
 
-            <form action="register.php" method="post" onsubmit="return validateForm();">
-                <div class="form-group">
-                    <label for="fname">First Name:</label>
-                    <input type="text" class="form-control" id="fname" name="fname" required>
-                </div>
 
-                <div class="form-group">
-                    <label for="lname">Last Name:</label>
-                    <input type="text" class="form-control" id="lname" name="lname" required>
-                </div>
+            while ($product = $result->fetch_assoc()) {
+                $imagePath = "images/products/" . htmlspecialchars($product['product_id']) . ".png";
+                echo "<div class='col-md-4 mb-4'>";
+                echo "<div class='product-card'>";
+                echo "<a href='product-detail.php?productId=" . $product['product_id'] . "'><img src='" . $imagePath . "' alt='" . htmlspecialchars($product['product_name']) . "'></a>";
+                echo "<h3><a href='product-detail.php?productId=" . $product['product_id'] . "'>" . htmlspecialchars($product['product_name']) . "</a></h3>";
+                echo "<p>Product ID: " . htmlspecialchars($product['product_id']) . "</p>";
+                echo "<p><strong>$" . htmlspecialchars($product['price']) . "</strong></p>";
+                echo "<p>Category: " . htmlspecialchars($product['category']) . "</p>";
+                echo "</div>";
+                echo "</div>";
+            }
 
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="text" class="form-control" id="email" name="email" required>
-                </div>
+            // Pagination Controls with Previous and Next Buttons
+            echo "<nav aria-label='Page navigation'>";
+            echo "<ul class='pagination justify-content-center'>";
 
-                <div class="form-group">
-                    <label for="phone">Phone Number:</label>
-                    <input type="text" class="form-control" id="phone" name="phone">
-                </div>
+            // Previous Button
+            $prevPage = max(1, $currentPage - 1);
+            echo "<li class='page-item " . ($currentPage == 1 ? "disabled" : "") . "'>
+                  <a class='page-link' href='?page=$prevPage' aria-label='Previous'>
+                      <span aria-hidden='true'>&laquo;</span>
+                  </a>
+               </li>";
 
-                <div class="form-group">
-                    <label for="address">Shipping Address:</label>
-                    <input type="text" class="form-control" id="sAddress" name="address" required>
-                </div>
+            // Page Numbers
+            for ($i = 1; $i <= $totalPages; $i++) {
+                echo "<li class='page-item" . ($i == $currentPage ? " active" : "") . "'>
+                      <a class='page-link' href='?page=$i'>$i</a>
+                   </li>";
+            }
 
-                <div class="form-group">
-                    <input type="checkbox" id="emailOptIn" name="emailOptIn">
-                    <label for="emailOptIn">Subscribe to Newsletter</label>
-                </div>
+            // Next Button
+            $nextPage = min($totalPages, $currentPage + 1);
+            echo "<li class='page-item " . ($currentPage == $totalPages ? "disabled" : "") . "'>
+                  <a class='page-link' href='?page=$nextPage' aria-label='Next'>
+                      <span aria-hidden='true'>&raquo;</span>
+                  </a>
+               </li>";
 
-                <div class="form-group">
-                    <input type="checkbox" id="sameAddress" name="sameAddress" checked
-                        onchange="toggleBillingAddress()">
-                    <label for="sameAddress">Billing and Shipping Address are the same</label>
-                </div>
-
-                <!-- Billing Address Fields, initially hidden -->
-                <div id="billingAddress" style="display:none;">
-                    <div class="form-group">
-                        <label for="billingAddress">Billing Address:</label>
-                        <input type="text" class="form-control" id="bAddress" name="billingAddress">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="pwd">Password:</label>
-                    <input type="password" class="form-control" id="password" name="pwd" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="cpwd">Confirm Password:</label>
-                    <input type="password" class="form-control" id="cpassword" name="cpwd" required>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Sign Up</button>
-                <br><br>
-                <p style="display: flex;"> Already have an account with us?
-                    <button style="margin-left: 25px; margin-top: -6px;" type="submit" class="btn btn-primary"
-                        onclick="location.href='login.php'">Login</button>
-                </p>
-
-
-            </form>
+            echo "</ul>";
+            echo "</nav>";
+            $conn->close();
+            ?>
         </div>
     </div>
+    <br>
+    <br>
 
-
+    
     <!-- Footer -->
     <footer>
         <div class="container py-4" style="text-align: center;">
@@ -345,38 +325,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $('#myModal').modal('hide');
         }
     </script>
-
-    <script>
-        function toggleBillingAddress() {
-            var billingAddressDiv = document.getElementById('billingAddress');
-            var sameAddressCheckbox = document.getElementById('sameAddress');
-            billingAddressDiv.style.display = sameAddressCheckbox.checked ? 'none' : 'block';
-        }
-
-        window.onload = function () {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('registered') === 'true') {
-                //  popup message
-                alert('Successfully registered');
-                history.replaceState(null, '', 'homepage.php');
-            }
-        };
-
-        function validateForm() {
-            var password = document.getElementById("password").value;
-            var confirmPassword = document.getElementById("cpassword").value;
-            if (password !== confirmPassword) {
-                alert("Passwords do not match.");
-                return false;
-            }
-            return true;
-        }
-    </script>
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </body>
 

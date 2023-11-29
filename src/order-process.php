@@ -1,75 +1,55 @@
 <?php
+
+require_once 'checksession.php';
 require_once 'conn.php';
 
-function sanitizeMySQL($connection, $var)
-{
-    $var = strip_tags($var);
-    $var = htmlentities($var);
-    $var = stripslashes($var);
-    return $connection->real_escape_string($var);
-}
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Connect to the database
+// Check if the user's email is in the admin table
+$currentUserEmail = $_SESSION['email'] ?? null;
+
+if ($currentUserEmail) {
     $conn = new mysqli($hn, $un, $pw, $db);
-    if ($conn->connect_error) {
+    if ($conn->connect_error)
         die("Connection failed: " . $conn->connect_error);
-    }
 
-    $email = $_POST['email'];
+    $adminCheckStmt = $conn->prepare("SELECT admin_id, email FROM admin WHERE email = ?");
+    $adminCheckStmt->bind_param("s", $currentUserEmail);
+    $adminCheckStmt->execute();
+    $result = $adminCheckStmt->get_result();
 
-    // Check if email exists in customer or admin table
-    $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ? UNION SELECT email FROM admin WHERE email = ?");
-    $stmt->bind_param("ss", $email, $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        echo "<script>alert('Email already exists!');</script>";
+    if ($result->num_rows == 0) {
+        // Not an admin, redirect to unauthorized page
+        header("Location: unauthorized.php");
+        exit;
     } else {
 
-        // Sanitize and validate the data
-        $email = sanitizeMySQL($conn, $_POST['email']);
-        $password = sanitizeMySQL($conn, $_POST['pwd']);
-        $firstName = sanitizeMySQL($conn, $_POST['fname']);
-        $lastName = sanitizeMySQL($conn, $_POST['lname']);
-        $phone = sanitizeMySQL($conn, $_POST['phone']);
-        $sAddress = sanitizeMySQL($conn, $_POST['address']);
-        $bAddress = isset($_POST['sameAddress']) && $_POST['sameAddress'] ? $sAddress : sanitizeMySQL($conn, $_POST['billingAddress']);
-
-        // Hash the password
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-
-        $stmt = $conn->prepare("SELECT email FROM customer WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
-
-        if ($result->num_rows > 0) {
-            // Email already exists
-            echo "<script>alert('Email already exists!');</script>";
-        } else {
-            // Prepare and bind
-            $stmt = $conn->prepare("INSERT INTO customer (first_name, last_name, email, password, phone, shipping_address, billing_address) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssssss", $firstName, $lastName, $email, $hashedPassword, $phone, $sAddress, $bAddress);
-
-            // Execute and check for success
-            if ($stmt->execute()) {
-                echo "<script>alert('New user added successfully!'); window.location.href='login.php';</script>";
-            } else {
-                echo "Error: " . $stmt->error;
-            }
-
-            // Close statement and connection
-            $stmt->close();
-        }
-        $conn->close();
+        $row = $result->fetch_assoc();
+        $adminId = $row['admin_id'];
     }
+
+
+
+    $adminCheckStmt->close();
+} else {
+    // No user email in session, redirect to unauthorized page
+    header("Location: unauthorized.php");
+    exit;
+}
+
+$_SESSION['admin_id'] = $adminId;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ordersToProcess'])) {
+    foreach ($_POST['ordersToProcess'] as $orderId) {
+        $stmt = $conn->prepare("UPDATE orders SET admin_id = ? WHERE order_id = ?");
+        $stmt->bind_param("ii", $adminId, $orderId);
+        $stmt->execute();
+    }
+
+    $stmt->close();
+    $conn->close();
+    echo "<script>alert('Orders assigned successfully!'); window.location.href='profile.php';</script>";
 }
 ?>
-
 
 
 <!DOCTYPE html>
@@ -78,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Order Processing</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="stylesheets/style.css">
@@ -109,17 +89,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         .btn-primary {
             background-color: black !important;
         }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 2rem;
+        }
+
+        footer {
+            background-color: #24282c !important;
+            color: #fff;
+            position: fixed;
+            width: 100%;
+            bottom: 0px;
+        }
     </style>
 </head>
 
 <body>
-
     <header>
         <nav class="navbar navbar-expand-lg navbar-light ">
             <div class="container-fluid">
@@ -154,80 +146,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </nav>
     </header>
 
-    <div class="container">
+
+
+    <?php
+    // Fetch all orders
+    $result = $conn->query("SELECT * FROM orders");
+
+    echo "<div class='container'>
+        <div class='order-process-section'>
         <br>
         <br>
-        <h2 class="text-center">Register Today</h2>
-        <div class="registration-form">
+            <h2>Order Processing</h2>
+            <br>
+            <div class='order-process'>
+                <form action='order-process.php' method='post'>
+                    <table class='table table-bordered'>
+                        <thead><tr><th>Order ID</th><th>Date</th><th>Status</th><th>Assign</th></tr></thead>
+                        <tbody>";
 
+    while ($order = $result->fetch_assoc()) {
+        $disabled = $order['admin_id'] ? "disabled checked" : ""; // Check if order is already assigned to an admin
+        echo "<tr>
+                                    <td>" . $order['order_id'] . "</td>
+                                    <td>" . $order['order_date'] . "</td>
+                                    <td>" . $order['status'] . "</td>
+                                    <td><input type='checkbox' name='ordersToProcess[]' value='" . $order['order_id'] . "' $disabled></td>
+                                  </tr>";
+    }
 
-            <form action="register.php" method="post" onsubmit="return validateForm();">
-                <div class="form-group">
-                    <label for="fname">First Name:</label>
-                    <input type="text" class="form-control" id="fname" name="fname" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="lname">Last Name:</label>
-                    <input type="text" class="form-control" id="lname" name="lname" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="text" class="form-control" id="email" name="email" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Phone Number:</label>
-                    <input type="text" class="form-control" id="phone" name="phone">
-                </div>
-
-                <div class="form-group">
-                    <label for="address">Shipping Address:</label>
-                    <input type="text" class="form-control" id="sAddress" name="address" required>
-                </div>
-
-                <div class="form-group">
-                    <input type="checkbox" id="emailOptIn" name="emailOptIn">
-                    <label for="emailOptIn">Subscribe to Newsletter</label>
-                </div>
-
-                <div class="form-group">
-                    <input type="checkbox" id="sameAddress" name="sameAddress" checked
-                        onchange="toggleBillingAddress()">
-                    <label for="sameAddress">Billing and Shipping Address are the same</label>
-                </div>
-
-                <!-- Billing Address Fields, initially hidden -->
-                <div id="billingAddress" style="display:none;">
-                    <div class="form-group">
-                        <label for="billingAddress">Billing Address:</label>
-                        <input type="text" class="form-control" id="bAddress" name="billingAddress">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="pwd">Password:</label>
-                    <input type="password" class="form-control" id="password" name="pwd" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="cpwd">Confirm Password:</label>
-                    <input type="password" class="form-control" id="cpassword" name="cpwd" required>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Sign Up</button>
-                <br><br>
-                <p style="display: flex;"> Already have an account with us?
-                    <button style="margin-left: 25px; margin-top: -6px;" type="submit" class="btn btn-primary"
-                        onclick="location.href='login.php'">Login</button>
-                </p>
-
-
-            </form>
+    echo "           </tbody>
+                    </table>
+                    <br>
+                    <br>
+                   <div style='display: flex; text-align:left; justify-content: end; align-items: center;'>
+                    <button type='submit' name='submit' class='btn btn-primary'>Assign Orders</button>
+                  <button id='cancelBtn' style='margin-left: 40px;' type='button' class='btn btn-primary' onclick=\"location.href='profile.php'\">Cancel</button>
+                  </div>
+                </form>
+            </div>
         </div>
-    </div>
+    </div>";
 
+    $conn->close();
+    ?>
+
+
+    <br>
+    <br>
+    </div>
 
     <!-- Footer -->
     <footer>
@@ -345,34 +311,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $('#myModal').modal('hide');
         }
     </script>
-
-    <script>
-        function toggleBillingAddress() {
-            var billingAddressDiv = document.getElementById('billingAddress');
-            var sameAddressCheckbox = document.getElementById('sameAddress');
-            billingAddressDiv.style.display = sameAddressCheckbox.checked ? 'none' : 'block';
-        }
-
-        window.onload = function () {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('registered') === 'true') {
-                //  popup message
-                alert('Successfully registered');
-                history.replaceState(null, '', 'homepage.php');
-            }
-        };
-
-        function validateForm() {
-            var password = document.getElementById("password").value;
-            var confirmPassword = document.getElementById("cpassword").value;
-            if (password !== confirmPassword) {
-                alert("Passwords do not match.");
-                return false;
-            }
-            return true;
-        }
-    </script>
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

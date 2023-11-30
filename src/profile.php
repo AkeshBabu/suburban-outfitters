@@ -110,26 +110,11 @@ $conn->close();
         .btn:hover {
             opacity: 0.8;
         }
-
-        footer {
-            background-color: #24282c !important;
-            color: #fff;
-            position: relative;
-            width: 100%;
-            bottom: 0px;
-        }
-
-        body {
-            font-family: 'Montserrat' !important;
-            position: relative !important;
-            background-color: ghostwhite;
-
-        }
     </style>
 
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
 
 
     <header>
@@ -207,16 +192,16 @@ $conn->close();
         <br>
         <br>
         <?php
-        require_once 'conn.php'; 
-        
+        require_once 'conn.php';
+
         // Check if the user is logged in
         if (isset($_SESSION['email'])) {
             $conn = new mysqli($hn, $un, $pw, $db);
             if ($conn->connect_error)
                 die("Connection failed: " . $conn->connect_error);
 
-            $email = $_SESSION['email']; 
-        
+            $email = $_SESSION['email'];
+
             // Check if the email exists in the admin table
             $stmt = $conn->prepare("SELECT email FROM admin WHERE email = ?");
             $stmt->bind_param("s", $email);
@@ -249,9 +234,9 @@ $conn->close();
     <br>
     <br>
 
-    
+
     <!-- Footer -->
-    <footer>
+    <footer class="mt-auto">
         <div class="container py-4" style="text-align: center;">
             <div class="row">
                 <div class="col-md-3">
@@ -282,7 +267,7 @@ $conn->close();
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="contactUsModalLabel">Contact Us</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -292,7 +277,7 @@ $conn->close();
                     <p>Call us at: <a href="tel:+123456789">1234567890</a>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -305,7 +290,7 @@ $conn->close();
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="locationHoursModalLabel">Location and Hours</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -314,7 +299,7 @@ $conn->close();
                     <p>We are open 24x7, anywhere and everywhere!</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -327,7 +312,7 @@ $conn->close();
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="privacyTermsModalLabel">Privacy and Terms</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -335,12 +320,11 @@ $conn->close();
                     <p style="font-size:14px;">Created and Maintained by DevTeam @ Suburban Outfitters.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
-
 
 
     <script>
@@ -366,6 +350,7 @@ $conn->close();
             $('#myModal').modal('hide');
         }
     </script>
+
 
     <script>
         function confirmDelete() {

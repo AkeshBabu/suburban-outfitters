@@ -54,18 +54,10 @@ require_once 'checksession.php';
       margin-top: 0;
       margin-bottom: 2rem;
     }
-
-    footer {
-      background-color: #24282c !important;
-      color: #fff;
-      position: relative;
-      width: 100%;
-      bottom: 0px;
-    }
   </style>
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
 
   <header>
     <nav class="navbar navbar-expand-lg navbar-light ">
@@ -124,8 +116,8 @@ require_once 'checksession.php';
             die("Connection failed: " . $conn->connect_error);
 
           // Define the maximum product_id value
-          $maxProductId = 20; 
-          
+          $maxProductId = 20;
+
           // Loop through product_id values and generate carousel items
           for ($productId = 1; $productId <= $maxProductId; $productId += 1) {
             echo '<div class="carousel-item';
@@ -135,7 +127,7 @@ require_once 'checksession.php';
             echo '">';
             echo '<div class="row">';
 
-           
+
             for ($i = 0; $i < 4; $i++) {
               // Fetch the product name from the products table based on product_id
               $productName = '';
@@ -154,7 +146,7 @@ require_once 'checksession.php';
               echo $productName . '<br>';
               echo '$' . $productPrice;
               echo '</div>';
-              $productId++; 
+              $productId++;
             }
 
             echo '</div>';
@@ -176,9 +168,9 @@ require_once 'checksession.php';
     </div>
   </div>
 
-  
+
   <!-- Footer -->
-  <footer>
+  <footer class="mt-auto">
     <div class="container py-4" style="text-align: center;">
       <div class="row">
         <div class="col-md-3">
@@ -209,7 +201,7 @@ require_once 'checksession.php';
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="contactUsModalLabel">Contact Us</h5>
-          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -219,7 +211,7 @@ require_once 'checksession.php';
           <p>Call us at: <a href="tel:+123456789">1234567890</a>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -232,7 +224,7 @@ require_once 'checksession.php';
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="locationHoursModalLabel">Location and Hours</h5>
-          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -241,7 +233,7 @@ require_once 'checksession.php';
           <p>We are open 24x7, anywhere and everywhere!</p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -254,7 +246,7 @@ require_once 'checksession.php';
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="privacyTermsModalLabel">Privacy and Terms</h5>
-          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -262,12 +254,11 @@ require_once 'checksession.php';
           <p style="font-size:14px;">Created and Maintained by DevTeam @ Suburban Outfitters.</p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
   </div>
-
 
 
   <script>

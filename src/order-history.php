@@ -20,9 +20,6 @@ require_once 'checksession.php';
             padding: 20px;
         }
 
-        body {
-            position: relative;
-        }
 
         .profile-details p,
         .order-history li {
@@ -74,14 +71,6 @@ require_once 'checksession.php';
             opacity: 0.8;
         }
 
-        footer {
-            background-color: #24282c !important;
-            color: #fff;
-            position: fixed;
-            width: 100%;
-            bottom: 0px;
-        }
-
         .order-history-section li {
             display: flex;
         }
@@ -94,7 +83,7 @@ require_once 'checksession.php';
 
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
 
 
     <header>
@@ -188,8 +177,9 @@ require_once 'checksession.php';
 
     <br>
     <br>
+
     <!-- Footer -->
-    <footer>
+    <footer class="mt-auto">
         <div class="container py-4" style="text-align: center;">
             <div class="row">
                 <div class="col-md-3">
@@ -220,7 +210,7 @@ require_once 'checksession.php';
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="contactUsModalLabel">Contact Us</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -230,7 +220,7 @@ require_once 'checksession.php';
                     <p>Call us at: <a href="tel:+123456789">1234567890</a>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -243,7 +233,7 @@ require_once 'checksession.php';
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="locationHoursModalLabel">Location and Hours</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -252,7 +242,7 @@ require_once 'checksession.php';
                     <p>We are open 24x7, anywhere and everywhere!</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -265,7 +255,7 @@ require_once 'checksession.php';
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="privacyTermsModalLabel">Privacy and Terms</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -273,12 +263,11 @@ require_once 'checksession.php';
                     <p style="font-size:14px;">Created and Maintained by DevTeam @ Suburban Outfitters.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
-
 
 
     <script>

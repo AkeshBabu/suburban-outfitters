@@ -33,7 +33,7 @@ Make sure you have the following prerequisites installed:
 1. Launch your PHPMyAdmin from your web server's control panel.
 2. Create a new database named `suburban-outfitters-db`.
 <<<<<<< HEAD
-3. Import the database dump file provided with the project into the `suburban-outfitters-db` database. You can find the SQL file in the project's 'src/db' directory.
+3. Import the database file provided with the project into the `suburban-outfitters-db` database. You can find the SQL file in the project's 'src/db' directory.
 4. Update the database configuration in the `config.php` file to match your PHPMyAdmin settings (check `conn.php` for default config.) (e.g., database name, username, password).
 
 ## Usage
@@ -43,8 +43,8 @@ Make sure you have the following prerequisites installed:
    ```sh
    git clone https://github.com/abho11/suburban-outfitters 
 
- 
-Ethics and Critical Thinking in Developing Front End Pages: 
+
+## Ethics and Critical Thinking in Developing Front End Pages: 
 
 Using ethics in web development is crucial. Ethical considerations:
 

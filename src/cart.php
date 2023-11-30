@@ -22,10 +22,6 @@ session_start();
             padding: 20px;
         }
 
-        body {
-            position: relative;
-        }
-
         .profile-details p,
         .order-history li {
             padding: 10px 0;
@@ -76,14 +72,6 @@ session_start();
             opacity: 0.8;
         }
 
-        footer {
-            background-color: #24282c !important;
-            color: #fff;
-            position: fixed;
-            width: 100%;
-            bottom: 0px;
-        }
-
         .order-history-section li {
             display: flex;
         }
@@ -118,7 +106,7 @@ session_start();
 
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
 
 
     <header>
@@ -205,8 +193,11 @@ session_start();
         </form>
 
     </div>
+    <br>
+    <br>
+
     <!-- Footer -->
-    <footer>
+    <footer class="mt-auto">
         <div class="container py-4" style="text-align: center;">
             <div class="row">
                 <div class="col-md-3">
@@ -237,7 +228,7 @@ session_start();
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="contactUsModalLabel">Contact Us</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -247,7 +238,7 @@ session_start();
                     <p>Call us at: <a href="tel:+123456789">1234567890</a>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -260,7 +251,7 @@ session_start();
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="locationHoursModalLabel">Location and Hours</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -269,7 +260,7 @@ session_start();
                     <p>We are open 24x7, anywhere and everywhere!</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -282,7 +273,7 @@ session_start();
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="privacyTermsModalLabel">Privacy and Terms</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -290,12 +281,11 @@ session_start();
                     <p style="font-size:14px;">Created and Maintained by DevTeam @ Suburban Outfitters.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
-
 
 
     <script>

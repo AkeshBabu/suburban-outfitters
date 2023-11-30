@@ -42,9 +42,9 @@ try {
     $quantityString = implode(",", $quantities);
 
     // Insert into orderline table
-    $insertDetail = $conn->prepare("INSERT INTO orderline (order_id, product_id, quantity) VALUES (?, ?, ?)");
+    $insertDetail = $conn->prepare("INSERT INTO orderline (order_id, product_id, quantity, total_amount) VALUES (?, ?, ?, ?)");
     $productIdsString = implode(",", $productIds);
-    $insertDetail->bind_param("iss", $orderId, $productIdsString, $quantityString);
+    $insertDetail->bind_param("issd", $orderId, $productIdsString, $quantityString, $totalAmount);
     $insertDetail->execute();
 
     // Commit transaction and clear the cart

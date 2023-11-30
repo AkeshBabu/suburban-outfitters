@@ -69,10 +69,6 @@ $quantities = explode(',', $lineItem['quantity']);
             padding: 20px;
         }
 
-        body {
-            position: relative;
-        }
-
         .profile-details p,
         .order-history li {
             padding: 10px 0;
@@ -123,14 +119,6 @@ $quantities = explode(',', $lineItem['quantity']);
             opacity: 0.8;
         }
 
-        footer {
-            background-color: #24282c !important;
-            color: #fff;
-            position: relative;
-            width: 100%;
-            bottom: 0px;
-        }
-
         .receipt-container {
             font-family: Arial, sans-serif;
             max-width: 950px;
@@ -177,6 +165,7 @@ $quantities = explode(',', $lineItem['quantity']);
         }
 
         @media print {
+
             header,
             footer,
             #printReceipt {
@@ -211,7 +200,7 @@ $quantities = explode(',', $lineItem['quantity']);
 
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
 
 
     <header>
@@ -330,7 +319,7 @@ $quantities = explode(',', $lineItem['quantity']);
     <br>
 
     <!-- Footer -->
-    <footer>
+    <footer class="mt-auto">
         <div class="container py-4" style="text-align: center;">
             <div class="row">
                 <div class="col-md-3">
@@ -361,7 +350,7 @@ $quantities = explode(',', $lineItem['quantity']);
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="contactUsModalLabel">Contact Us</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -371,7 +360,7 @@ $quantities = explode(',', $lineItem['quantity']);
                     <p>Call us at: <a href="tel:+123456789">1234567890</a>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -384,7 +373,7 @@ $quantities = explode(',', $lineItem['quantity']);
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="locationHoursModalLabel">Location and Hours</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -393,7 +382,7 @@ $quantities = explode(',', $lineItem['quantity']);
                     <p>We are open 24x7, anywhere and everywhere!</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -406,7 +395,7 @@ $quantities = explode(',', $lineItem['quantity']);
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="privacyTermsModalLabel">Privacy and Terms</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -414,12 +403,11 @@ $quantities = explode(',', $lineItem['quantity']);
                     <p style="font-size:14px;">Created and Maintained by DevTeam @ Suburban Outfitters.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
-
 
 
     <script>

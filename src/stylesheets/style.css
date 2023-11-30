@@ -1,9 +1,7 @@
 /* General Styles */
 body {
     font-family: 'Montserrat' !important;
-    position: relative !important;
     background-color: ghostwhite;
-
 }
 
 a :hover {
@@ -112,9 +110,6 @@ header h1 {
 footer {
     background-color: #24282c !important;
     color: #fff;
-    position: relative;
-    width: 100% !important;
-    bottom: 0px !important;
 }
 
 .p-3 {

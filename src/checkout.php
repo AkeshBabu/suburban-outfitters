@@ -227,6 +227,7 @@ if (!isset($_SESSION['cart']) || count($_SESSION['cart']) == 0) {
             }
 
             echo "</table>";
+            echo "<br><h5 style='direction: rtl;'><strong>Total Order Amount: $" . htmlspecialchars(number_format($totalAmount, 2)) . "</strong></h5>"; 
         } else {
             echo "<tr><td colspan='4'>Your cart is empty</td></tr>";
         }

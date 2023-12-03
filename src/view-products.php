@@ -61,7 +61,8 @@
 
         .product-card img {
             max-width: 100%;
-            height: auto;
+            max-height: 100%;
+            height: 400px;
             margin-bottom: 10px;
         }
 
@@ -78,7 +79,8 @@
     </style>
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
+
 
     <header>
         <nav class="navbar navbar-expand-lg navbar-light ">
@@ -104,6 +106,12 @@
                             <img src="https://cdn-icons-png.flaticon.com/128/64/64572.png" width="30px" height="30px">
                         </a>
                     </li>
+                    <li id="wishlistIcon" class="nav-item">
+                        <a class="nav-link" href="wishlist.php">
+                            <img src="https://cdn-icons-png.flaticon.com/128/4240/4240564.png" width="30px"
+                                height="30px">
+                        </a>
+                    </li>
                     <li id="cartIcon" class="nav-item">
                         <a class="nav-link" href="cart.php">
                             <img src="https://cdn-icons-png.flaticon.com/128/253/253298.png" width="30px" height="30px">
@@ -111,6 +119,25 @@
                     </li>
                 </ul>
             </div>
+        </nav>
+        <!-- Second Navbar for Categories -->
+        <nav id="categories" class="navbar navbar-expand-lg navbar-light " style="background-color: ghostwhite;">
+            <ul id="global-main-menu" class="nav navbar-nav navbar-collapse collapse"
+                style="justify-content: center;flex-wrap:nowrap; gap: 30px;">
+                <!-- Categories as list items -->
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=men"><strong>Men</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=women"><strong>Women</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=headwear"><strong>Headwear</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=footwear"><strong>Footwear</strong></a>
+                </li>
+            </ul>
         </nav>
     </header>
 
@@ -124,33 +151,45 @@
             <?php
             require_once 'conn.php';
 
+            $conn = new mysqli($hn, $un, $pw, $db);
+            if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+            }
+
+            // Retrieve category and search term from URL parameters
+            $category = isset($_GET['category']) ? $_GET['category'] : null;
+            $search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
+
             // Define how many products per page
             $productsPerPage = 6;
             $currentPage = isset($_GET['page']) ? (int) $_GET['page'] : 1;
             $offset = ($currentPage - 1) * $productsPerPage;
 
-            $conn = new mysqli($hn, $un, $pw, $db);
-            if ($conn->connect_error)
-                die("Connection failed: " . $conn->connect_error);
 
-            // Calculate total pages
-            $totalProducts = $conn->query("SELECT COUNT(*) FROM products")->fetch_row()[0];
+            // Determine the SQL query based on the category and search term
+            if ($category) {
+                $query = "SELECT * FROM products WHERE category = '$category'";
+                $countQuery = "SELECT COUNT(*) FROM products WHERE category = '$category'";
+            } elseif ($search) {
+                $query = "SELECT * FROM products WHERE product_name LIKE '%$search%'";
+                $countQuery = "SELECT COUNT(*) FROM products WHERE product_name LIKE '%$search%'";
+            } else {
+                $query = "SELECT * FROM products";
+                $countQuery = "SELECT COUNT(*) FROM products";
+            }
+
+            // Append LIMIT and OFFSET for pagination
+            $query .= " LIMIT $productsPerPage OFFSET $offset";
+
+            // Execute query for pagination count
+            $totalProductsResult = $conn->query($countQuery);
+            $totalProducts = $totalProductsResult->fetch_row()[0];
             $totalPages = ceil($totalProducts / $productsPerPage);
 
-            // Fetch products for the current page
-            $result = $conn->query("SELECT * FROM products LIMIT $productsPerPage OFFSET $offset");
+            // Fetch products based on the query
+            $result = $conn->query($query);
 
-            // Search functionality
-            $search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
-
-            // SQL query for searching products
-            $searchQuery = "SELECT * FROM products WHERE product_name LIKE '%$search%' LIMIT $productsPerPage OFFSET $offset";
-
-            // Fetch products based on the search query
-            $result = $conn->query($searchQuery);
-
-
-
+            // Display products
             while ($product = $result->fetch_assoc()) {
                 $imagePath = "images/products/" . htmlspecialchars($product['product_id']) . ".png";
                 echo "<div class='col-md-4 mb-4'>";
@@ -164,6 +203,15 @@
                 echo "</div>";
             }
 
+            // Create a base URL for pagination links
+            $baseUrl = 'view-products.php?';
+            if ($category) {
+                $baseUrl .= 'category=' . urlencode($category) . '&';
+            }
+            if ($search) {
+                $baseUrl .= 'search=' . urlencode($search) . '&';
+            }
+
             // Pagination Controls with Previous and Next Buttons
             echo "<nav aria-label='Page navigation'>";
             echo "<ul class='pagination justify-content-center'>";
@@ -171,28 +219,29 @@
             // Previous Button
             $prevPage = max(1, $currentPage - 1);
             echo "<li class='page-item " . ($currentPage == 1 ? "disabled" : "") . "'>
-                  <a class='page-link' href='?page=$prevPage' aria-label='Previous'>
-                      <span aria-hidden='true'>&laquo;</span>
-                  </a>
-               </li>";
+      <a class='page-link' href='" . $baseUrl . "page=$prevPage' aria-label='Previous'>
+          <span aria-hidden='true'>&laquo;</span>
+      </a>
+   </li>";
 
             // Page Numbers
             for ($i = 1; $i <= $totalPages; $i++) {
                 echo "<li class='page-item" . ($i == $currentPage ? " active" : "") . "'>
-                      <a class='page-link' href='?page=$i'>$i</a>
-                   </li>";
+          <a class='page-link' href='" . $baseUrl . "page=$i'>$i</a>
+       </li>";
             }
 
             // Next Button
             $nextPage = min($totalPages, $currentPage + 1);
             echo "<li class='page-item " . ($currentPage == $totalPages ? "disabled" : "") . "'>
-                  <a class='page-link' href='?page=$nextPage' aria-label='Next'>
-                      <span aria-hidden='true'>&raquo;</span>
-                  </a>
-               </li>";
+      <a class='page-link' href='" . $baseUrl . "page=$nextPage' aria-label='Next'>
+          <span aria-hidden='true'>&raquo;</span>
+      </a>
+   </li>";
 
             echo "</ul>";
             echo "</nav>";
+
             $conn->close();
             ?>
         </div>
@@ -200,7 +249,7 @@
     <br>
     <br>
 
-    
+
     <!-- Footer -->
     <footer class="mt-auto">
         <div class="container py-4" style="text-align: center;">
@@ -214,10 +263,11 @@
                 <div class="col-md-3">
                     <a href="#" id="privacyTermsModalTrigger">Privacy and Terms</a>
                 </div>
-                <div class="col-md-3">
-                    <a href="https://www.instagram.com/" target=" _blank"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.facebook.com/" target=" _blank"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://twitter.com/" target=" _blank"><i class="fab fa-twitter"></i></a>
+
+                <div id="socialIcons" style="display: flex; justify-content: center; gap:25px;" class="col-md-3">
+                    <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
                 </div>
             </div>
         </div>

@@ -37,6 +37,11 @@
               <img src="https://cdn-icons-png.flaticon.com/128/64/64572.png" width="30px" height="30px">
             </a>
           </li>
+          <li id="wishlistIcon" class="nav-item">
+            <a class="nav-link" href="wishlist.php">
+              <img src="https://cdn-icons-png.flaticon.com/128/4240/4240564.png" width="30px" height="30px">
+            </a>
+          </li>
           <li id="cartIcon" class="nav-item">
             <a class="nav-link" href="cart.php">
               <img src="https://cdn-icons-png.flaticon.com/128/253/253298.png" width="30px" height="30px">
@@ -44,6 +49,25 @@
           </li>
         </ul>
       </div>
+    </nav>
+    <!-- Second Navbar for Categories -->
+    <nav id="categories" class="navbar navbar-expand-lg navbar-light " style="background-color: ghostwhite;">
+      <ul id="global-main-menu" class="nav navbar-nav navbar-collapse collapse"
+        style="justify-content: center;flex-wrap:nowrap; gap: 30px;">
+        <!-- Categories as list items -->
+        <li class="nav-item">
+          <a class="nav-link" href="view-products.php?category=men"><strong>Men</strong></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="view-products.php?category=women"><strong>Women</strong></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="view-products.php?category=headwear"><strong>Headwear</strong></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="view-products.php?category=footwear"><strong>Footwear</strong></a>
+        </li>
+      </ul>
     </nav>
   </header>
 
@@ -64,46 +88,42 @@
           if ($conn->connect_error)
             die("Connection failed: " . $conn->connect_error);
 
-          // Define the maximum product_id value
-          $maxProductId = 20;
-
-          // Loop through product_id values and generate carousel items
-          for ($productId = 1; $productId <= $maxProductId; $productId += 1) {
-            echo '<div class="carousel-item';
-            if ($productId === 1) {
-              echo ' active';
+          // Fetch all products with their image file existence status
+          $products = [];
+          $stmt = $conn->prepare("SELECT product_id, product_name, price FROM products WHERE product_id <= ?");
+          $maxProductId = 200;
+          $stmt->bind_param("i", $maxProductId);
+          $stmt->execute();
+          $result = $stmt->get_result();
+          while ($row = $result->fetch_assoc()) {
+            $imageFilename = "images/products/{$row['product_id']}.png";
+            if (file_exists($imageFilename)) {
+              $row['image'] = $imageFilename;
+              $products[] = $row;
             }
-            echo '">';
+          }
+          $stmt->close();
+          $conn->close();
+
+          // Display products in the carousel
+          $productCount = count($products);
+          for ($i = 0; $i < $productCount; $i += 4) {
+            echo '<div class="carousel-item' . ($i == 0 ? ' active' : '') . '">';
             echo '<div class="row">';
 
-
-            for ($i = 0; $i < 4; $i++) {
-              // Fetch the product name from the products table based on product_id
-              $productName = '';
-              $stmt = $conn->prepare("SELECT product_name, price FROM products WHERE product_id = ?");
-              $stmt->bind_param("i", $productId);
-              $stmt->execute();
-              $stmt->bind_result($productName, $productPrice);
-              $stmt->fetch();
-              $stmt->close();
-
-              // Define the image filename based on the product_id
-              $imageFilename = "images/products/{$productId}.png";
-
-              echo '<div class="col-md-3" style="text-align:center; ">';
-              echo '<a href="product-detail.php?productId=' . $productId . '"><img src="' . $imageFilename . '" class="d-block w-100" alt="shirt' . $productId . '"></a><br>';
-              echo $productName . '<br>';
-              echo '$' . $productPrice;
+            for ($j = $i; $j < $i + 4 && $j < $productCount; $j++) {
+              echo '<div class="col-md-3" style="text-align:center;">';
+              echo '<a href="product-detail.php?productId=' . $products[$j]['product_id'] . '"><img src="' . $products[$j]['image'] . '" class="d-block w-100" alt="' . $products[$j]['product_name'] . '"></a><br>';
+              echo $products[$j]['product_name'] . '<br>';
+              echo '$' . $products[$j]['price'];
               echo '</div>';
-              $productId++;
             }
 
-            echo '</div>';
-            echo '</div>';
+            echo '</div>'; // Close row div
+            echo '</div>'; // Close carousel-item div
           }
-
-          $conn->close();
           ?>
+
         </div>
         <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls"
           data-bs-slide="prev">
@@ -178,7 +198,6 @@
   <br>
   <br>
 
-
   <!-- Footer -->
   <footer class="mt-auto">
     <div class="container py-4" style="text-align: center;">
@@ -192,10 +211,11 @@
         <div class="col-md-3">
           <a href="#" id="privacyTermsModalTrigger">Privacy and Terms</a>
         </div>
-        <div class="col-md-3">
-          <a href="https://www.instagram.com/" target=" _blank"><i class="fab fa-instagram"></i></a>
-          <a href="https://www.facebook.com/" target=" _blank"><i class="fab fa-facebook-f"></i></a>
-          <a href="https://twitter.com/" target=" _blank"><i class="fab fa-twitter"></i></a>
+
+        <div id="socialIcons" style="display: flex; justify-content: center; gap:25px;" class="col-md-3">
+          <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+          <a href="https://www.facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
         </div>
       </div>
     </div>

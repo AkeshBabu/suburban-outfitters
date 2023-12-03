@@ -117,6 +117,7 @@ $conn->close();
 <body class="d-flex flex-column min-vh-100">
 
 
+
     <header>
         <nav class="navbar navbar-expand-lg navbar-light ">
             <div class="container-fluid">
@@ -141,6 +142,12 @@ $conn->close();
                             <img src="https://cdn-icons-png.flaticon.com/128/64/64572.png" width="30px" height="30px">
                         </a>
                     </li>
+                    <li id="wishlistIcon" class="nav-item">
+                        <a class="nav-link" href="wishlist.php">
+                            <img src="https://cdn-icons-png.flaticon.com/128/4240/4240564.png" width="30px"
+                                height="30px">
+                        </a>
+                    </li>
                     <li id="cartIcon" class="nav-item">
                         <a class="nav-link" href="cart.php">
                             <img src="https://cdn-icons-png.flaticon.com/128/253/253298.png" width="30px" height="30px">
@@ -149,6 +156,26 @@ $conn->close();
                 </ul>
             </div>
         </nav>
+
+        <!-- Second Navbar for Categories -->
+        <nav id="categories" class="navbar navbar-expand-lg navbar-light " style="background-color: ghostwhite;">
+            <ul id="global-main-menu" class="nav navbar-nav navbar-collapse collapse"
+                style="justify-content: center;flex-wrap:nowrap; gap: 30px;">
+                <!-- Categories as list items -->
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=men"><strong>Men</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=women"><strong>Women</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=headwear"><strong>Headwear</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=footwear"><strong>Footwear</strong></a>
+                </li>
+            </ul>
+        </nav>
     </header>
 
     <br>
@@ -156,39 +183,45 @@ $conn->close();
 
     <div class="container">
         <div class="profile-section">
-            <h2>Profile Details</h2>
-            <br>
-            <div class="profile-details">
-                <p><strong>First Name </strong><br><span id="firstName">
-                        <?php echo $firstName; ?>
-                    </span></p>
-                <p><strong>Last Name </strong><br><span id="lastName">
-                        <?php echo $lastName; ?>
-                    </span></p>
-                <p><strong>Email</strong> <br><span id="email">
-                        <?php echo $email; ?>
-                    </span></p>
-                <p><strong>Phone Number</strong> <br><span id="phone">
-                        <?php echo $phone; ?>
-                    </span></p>
-                <p><strong>Shipping Address</strong> <br><span id="shippingAddress">
-                        <?php echo $shippingAddress; ?>
-                    </span></p>
-                <p><strong>Billing Address</strong><br><span id="billingAddress">
-                        <?php echo $billingAddress; ?>
-                    </span></p>
+            <h1 style="text-align:center;">Profile Details</h1>
+            <div class="registration-form">
+                <br>
+                <div class="profile-details">
+                    <p><strong>First Name </strong><br><span id="firstName">
+                            <?php echo $firstName; ?>
+                        </span></p>
+                    <p><strong>Last Name </strong><br><span id="lastName">
+                            <?php echo $lastName; ?>
+                        </span></p>
+                    <p><strong>Email</strong> <br><span id="email">
+                            <?php echo $email; ?>
+                        </span></p>
+                    <p><strong>Phone Number</strong> <br><span id="phone">
+                            <?php echo $phone; ?>
+                        </span></p>
+                    <p><strong>Shipping Address</strong> <br><span id="shippingAddress">
+                            <?php echo $shippingAddress; ?>
+                        </span></p>
+                    <p><strong>Billing Address</strong><br><span id="billingAddress">
+                            <?php echo $billingAddress; ?>
+                        </span></p>
+                    <div style="direction:rtl;">
+                        <button onclick="location.href='edit-profile.php'" class="btn btn-primary">Update
+                            Profile</button>
+                    </div>
+                </div>
             </div>
 
-            <!-- Update and Delete Profile Buttons -->
-            <div class="profile-actions">
-                <button onclick="location.href='order-history.php'" class="btn btn-primary">View Orders</button>
-                <button onclick="location.href='edit-profile.php'" class="btn btn-primary">Update Profile</button>
-            </div>
+
+
         </div>
+        <!-- Profile Buttons -->
         <div class="profile-actions" style="text-align: right;">
+            <button onclick="location.href='order-history.php'" class="btn btn-primary">View Recent Orders</button>
             <button onclick="location.href='logout.php'" class="btn btn-primary">Logout</button>
             <button onclick="confirmDelete()" class="btn btn-danger">Delete Profile</button>
         </div>
+        <br>
         <br>
         <br>
         <?php
@@ -210,16 +243,15 @@ $conn->close();
 
             if ($result->num_rows > 0) {
                 // User is an admin, display the Administrator Options section
-                echo "<div class='order-history-section'>
+                echo "<div class='order-history-section' style=' text-align: center;'>
                 <h2>Administrator Options</h2>
                 <br>
           
                 <div style='display:flex;' class='order-history'>
                     <ul style='display:flex; flex:auto;'>
-                        <li style='flex:auto;'><button onclick=\"location.href='order-process.php'\" class='btn btn-primary'>Process Orders</button></li>
-                        <li style='flex:auto;'><button onclick=\"location.href='add-product.php'\" class='btn btn-primary'>Add New Product</button></li>
-                        <li style='flex:auto;'><button onclick=\"location.href='product-list.php'\" class='btn btn-primary'>View Products</button></li>
-                        <li style='flex:auto;'><button onclick=\"location.href='admin-rights.php'\" class='btn btn-primary'>Admin Privileges</button></li>
+                        <li style='flex:auto;'><button onclick=\"location.href='order-process.php'\" class='btn btn-primary'>Order Management</button></li>
+                        <li style='flex:auto;'><button onclick=\"location.href='inventory-management.php'\" class='btn btn-primary'>Inventory Management</button></li>
+                        <li style='flex:auto;'><button onclick=\"location.href='admin-rights.php'\" class='btn btn-primary'>Role Management</button></li>
                     </ul>
                 </div>
               </div>";
@@ -248,10 +280,11 @@ $conn->close();
                 <div class="col-md-3">
                     <a href="#" id="privacyTermsModalTrigger">Privacy and Terms</a>
                 </div>
-                <div class="col-md-3">
-                    <a href="https://www.instagram.com/" target=" _blank"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.facebook.com/" target=" _blank"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://twitter.com/" target=" _blank"><i class="fab fa-twitter"></i></a>
+
+                <div id="socialIcons" style="display: flex; justify-content: center; gap:25px;" class="col-md-3">
+                    <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
                 </div>
             </div>
         </div>

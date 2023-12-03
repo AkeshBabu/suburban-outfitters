@@ -1,5 +1,16 @@
 <?php
 session_start();
+$loggedIn = isset($_SESSION['customer_id']);
+if (!$loggedIn) {
+    header("Location: profile.php");
+    exit();
+}
+
+// Redirect to a different page if the cart is empty
+if (!isset($_SESSION['cart']) || count($_SESSION['cart']) == 0) {
+    header("Location: cart.php"); // Redirect to cart page or home page
+    exit;
+}
 ?>
 
 
@@ -116,6 +127,7 @@ session_start();
 <body class="d-flex flex-column min-vh-100">
 
 
+
     <header>
         <nav class="navbar navbar-expand-lg navbar-light ">
             <div class="container-fluid">
@@ -140,6 +152,12 @@ session_start();
                             <img src="https://cdn-icons-png.flaticon.com/128/64/64572.png" width="30px" height="30px">
                         </a>
                     </li>
+                    <li id="wishlistIcon" class="nav-item">
+                        <a class="nav-link" href="wishlist.php">
+                            <img src="https://cdn-icons-png.flaticon.com/128/4240/4240564.png" width="30px"
+                                height="30px">
+                        </a>
+                    </li>
                     <li id="cartIcon" class="nav-item">
                         <a class="nav-link" href="cart.php">
                             <img src="https://cdn-icons-png.flaticon.com/128/253/253298.png" width="30px" height="30px">
@@ -148,44 +166,72 @@ session_start();
                 </ul>
             </div>
         </nav>
+        <!-- Second Navbar for Categories -->
+        <nav id="categories" class="navbar navbar-expand-lg navbar-light " style="background-color: ghostwhite;">
+            <ul id="global-main-menu" class="nav navbar-nav navbar-collapse collapse"
+                style="justify-content: center;flex-wrap:nowrap; gap: 30px;">
+                <!-- Categories as list items -->
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=men"><strong>Men</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=women"><strong>Women</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=headwear"><strong>Headwear</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=footwear"><strong>Footwear</strong></a>
+                </li>
+            </ul>
+        </nav>
     </header>
 
     <br>
     <br>
     <div class="container">
         <h1 style="text-align: center;">Checkout</h1>
+        <form style="direction: ltr;">
+            <a href="cart.php" style="position:relative; top: -25px; color:black;">
+                <i class="fas fa-arrow-left"></i> Back to Cart
+            </a>
+        </form>
         <br><br>
-        <table class="cart-table" id="cart-container">
+
+        <?php
+        $totalAmount = 0;
+        if (isset($_SESSION['cart']) && count($_SESSION['cart']) > 0) {
+            echo "<table class='cart-table'>
             <tr>
                 <th>Product Name</th>
+                <th>Size</th>
                 <th>Quantity</th>
+                <th>Price Per Item</th>
                 <th>Total</th>
-            </tr>
-            <?php
-            $totalAmount = 0;
-            if (isset($_SESSION['cart']) && count($_SESSION['cart']) > 0) {
-                foreach ($_SESSION['cart'] as $productId => $productDetails) {
-                    $lineTotal = $productDetails['quantity'] * $productDetails['price'];
-                    $totalAmount += $lineTotal;
+            </tr>";
 
-                    echo "<tr>
-                            <td>" . htmlspecialchars($productDetails['name']) . "</td>
-                            <td>" . htmlspecialchars($productDetails['quantity']) . "</td> <!-- Display quantity -->
-                            <td id='total-$productId'>$" . number_format($lineTotal, 2) . "</td>
-                          </tr>";
-                }
-            } else {
-                echo "<tr><td colspan='3'>Your cart is empty</td></tr>";
+            foreach ($_SESSION['cart'] as $productId => $productDetails) {
+                $lineTotal = $productDetails['quantity'] * $productDetails['price'];
+                $totalAmount += $lineTotal;
+
+                // Check if 'size' key exists for each product
+                $productSize = isset($productDetails['size']) ? htmlspecialchars($productDetails['size']) : 'N/A';
+
+                echo "<tr>
+                <td>" . htmlspecialchars($productDetails['name']) . "</td>
+                <td>" . $productSize . "</td> 
+                <td>" . htmlspecialchars($productDetails['quantity']) . "</td>
+                <td>$" . htmlspecialchars(number_format($productDetails['price'], 2)) . "</td>
+                <td id='total-$productId'>$" . number_format($lineTotal, 2) . "</td>
+              </tr>";
             }
-            ?>
-            <tr>
-                <td colspan="2"><strong>Total Order Amount:</strong></td>
 
-                <td id="total-amount"><strong>$
-                        <?php echo number_format($totalAmount, 2); ?>
-                    </strong></td>
-            </tr>
-        </table>
+            echo "</table>";
+        } else {
+            echo "<tr><td colspan='4'>Your cart is empty</td></tr>";
+        }
+        ?>
+
 
         <br>
 
@@ -221,7 +267,7 @@ session_start();
             <div id="creditCardForm" style="display: none;">
                 <h3>Credit Card Details</h3>
                 <br>
-                <form action="create-order.php" method="post">
+                <form action="create-order.php" method="post" class="payment-form">
                     <div style="display: flex; flex-direction: column; align-items: flex-start;">
                         <label for="cardNumber">Card Number:</label>
                         <input type="text" id="cardNumber" name="cardNumber" required style="width: 100%;">
@@ -238,9 +284,10 @@ session_start();
                         <input type="text" id="cvv" name="cvv" required style="width: 50px;">
                     </div>
                     <br><br>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap:50px">
                         <button class="btn btn-primary" type="submit">Place Order</button>
-                        <a class="btn btn-primary" href="javascript:void(0);" onclick="showPaymentOptions()">Back</a>
+                        <a style="color:red;" href="javascript:void(0);" onclick="showPaymentOptions()">Back to Payment
+                            Options</a>
                     </div>
                 </form>
             </div>
@@ -248,7 +295,7 @@ session_start();
                 <br>
                 <h3>Debit Card Details</h3>
                 <br>
-                <form action="create-order.php" method="post">
+                <form action="create-order.php" method="post" class="payment-form">
                     <div style="display: flex; flex-direction: column; align-items: flex-start;">
                         <label for="debitCardNumber">Debit Card Number:</label>
                         <input type="text" id="debitCardNumber" name="debitCardNumber" required style="width: 100%;">
@@ -265,9 +312,10 @@ session_start();
                         <input type="text" id="debitCvv" name="debitCvv" required style="width: 50px;">
                     </div>
                     <br><br>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap:50px">
                         <button class="btn btn-primary" type="submit">Place Order</button>
-                        <a class="btn btn-primary" href="javascript:void(0);" onclick="showPaymentOptions()">Back</a>
+                        <a style="color:red;" href="javascript:void(0);" onclick="showPaymentOptions()">Back to Payment
+                            Options</a>
                     </div>
                 </form>
             </div>
@@ -275,13 +323,16 @@ session_start();
                 <h3>PayPal Details</h3>
                 <br>
                 <p>Log in to your PayPal account to complete the payment.</p>
-                <a href="https://www.paypal.com" target="_blank" class="btn btn-primary">Log In to PayPal</a>
-                <a class="btn btn-primary" href="javascript:void(0);" onclick="showPaymentOptions()">Back</a>
+                <div style="display: flex; justify-content: space-between; align-items: center; gap:50px">
+                    <a href="https://www.paypal.com" target="_blank" class="btn btn-primary">Log In to PayPal</a>
+                    <a style="color:red;" href="javascript:void(0);" onclick="showPaymentOptions()">Back to Payment
+                        Options</a>
+                </div>
             </div>
             <div id="giftCardForm" style="display: none;">
                 <h3>Gift Card Details</h3>
                 <br>
-                <form action="create-order.php" method="post">
+                <form action="create-order.php" method="post" class="payment-form">
                     <div style="display: flex; flex-direction: column; align-items: flex-start;">
                         <label for="giftCardNumber">Gift Card Number:</label>
                         <input type="text" id="giftCardNumber" name="giftCardNumber" required style="width: 100%;">
@@ -292,21 +343,19 @@ session_start();
                         <input type="text" id="giftCardPin" name="giftCardPin" required style="width: 70px;">
                     </div>
                     <br><br>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap:50px">
                         <button class="btn btn-primary" type="submit">Place Order</button>
-                        <a class="btn btn-primary" href="javascript:void(0);" onclick="showPaymentOptions()">Back</a>
+                        <a style="color:red;" href="javascript:void(0);" onclick="showPaymentOptions()">Back to Payment
+                            Options</a>
                     </div>
                 </form>
             </div>
         </div>
         <br>
 
-        <form style="direction: rtl;">
-            <a class="btn btn-primary" href="cart.php">Back to Cart</a>
-        </form>
+
     </div>
     <br><br>
-
 
     <!-- Footer -->
     <footer class="mt-auto">
@@ -321,10 +370,11 @@ session_start();
                 <div class="col-md-3">
                     <a href="#" id="privacyTermsModalTrigger">Privacy and Terms</a>
                 </div>
-                <div class="col-md-3">
-                    <a href="https://www.instagram.com/" target=" _blank"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.facebook.com/" target=" _blank"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://twitter.com/" target=" _blank"><i class="fab fa-twitter"></i></a>
+
+                <div id="socialIcons" style="display: flex; justify-content: center; gap:25px;" class="col-md-3">
+                    <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
                 </div>
             </div>
         </div>
@@ -400,8 +450,6 @@ session_start();
     </div>
 
 
-
-
     <script>
         // JavaScript to open the Privacy and Terms modal
         document.getElementById('privacyTermsModalTrigger').addEventListener('click', function () {
@@ -424,6 +472,22 @@ session_start();
         function closeModal() {
             $('#myModal').modal('hide');
         }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            // Select all forms with the class 'payment-form'
+            document.querySelectorAll('.payment-form').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    // Show confirmation dialog
+                    let confirmSubmission = confirm('Are you sure you want to place the order?');
+                    if (!confirmSubmission) {
+                        // Prevent form submission if user cancels
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
     </script>
 
     <script>
@@ -450,6 +514,7 @@ session_start();
                     }
                 })
                 .catch(error => console.error('Error:', error));
+
         }
 
         function showPaymentOptions() {

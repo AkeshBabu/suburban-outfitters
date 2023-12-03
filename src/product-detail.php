@@ -1,3 +1,7 @@
+<?php
+session_start();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -74,14 +78,21 @@
 
         .product-image img {
             max-width: 100%;
-            max-height: 300px;
+            max-height: 400px;
             margin: 0 auto;
             display: block;
+        }
+
+        .size-btn.selected {
+            background-color: black;
+            color: white;
+            border: 3px solid #adb5bd;
         }
     </style>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
+
 
     <header>
         <nav class="navbar navbar-expand-lg navbar-light ">
@@ -107,6 +118,12 @@
                             <img src="https://cdn-icons-png.flaticon.com/128/64/64572.png" width="30px" height="30px">
                         </a>
                     </li>
+                    <li id="wishlistIcon" class="nav-item">
+                        <a class="nav-link" href="wishlist.php">
+                            <img src="https://cdn-icons-png.flaticon.com/128/4240/4240564.png" width="30px"
+                                height="30px">
+                        </a>
+                    </li>
                     <li id="cartIcon" class="nav-item">
                         <a class="nav-link" href="cart.php">
                             <img src="https://cdn-icons-png.flaticon.com/128/253/253298.png" width="30px" height="30px">
@@ -115,8 +132,26 @@
                 </ul>
             </div>
         </nav>
+        <!-- Second Navbar for Categories -->
+        <nav id="categories" class="navbar navbar-expand-lg navbar-light " style="background-color: ghostwhite;">
+            <ul id="global-main-menu" class="nav navbar-nav navbar-collapse collapse"
+                style="justify-content: center;flex-wrap:nowrap; gap: 30px;">
+                <!-- Categories as list items -->
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=men"><strong>Men</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=women"><strong>Women</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=headwear"><strong>Headwear</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=footwear"><strong>Footwear</strong></a>
+                </li>
+            </ul>
+        </nav>
     </header>
-
 
     <div class="container">
         <br><br>
@@ -128,38 +163,104 @@
                 <?php
                 require_once 'conn.php';
 
+
                 $conn = new mysqli($hn, $un, $pw, $db);
-                if ($conn->connect_error)
+                if ($conn->connect_error) {
                     die("Connection failed: " . $conn->connect_error);
+                }
 
                 // Fetch the product ID from the URL query parameter
                 $productId = isset($_GET['productId']) ? intval($_GET['productId']) : 0;
 
+                $isInWishlist = false;
+                $isLoggedIn = isset($_SESSION['customer_id']);
+
+                if ($isLoggedIn && $productId) {
+                    $wishlistCheckStmt = $conn->prepare("SELECT COUNT(*) FROM wishlist WHERE customer_id = ? AND product_id = ?");
+                    $wishlistCheckStmt->bind_param("ii", $_SESSION['customer_id'], $productId);
+                    $wishlistCheckStmt->execute();
+                    $result = $wishlistCheckStmt->get_result();
+                    $row = $result->fetch_row();
+
+                    if ($row[0] > 0) {
+                        $isInWishlist = true;
+                    }
+
+                    $wishlistCheckStmt->close();
+                }
+
                 if ($productId) {
+                    // SQL query to fetch sizes with quantity > 0
+                    $sizesStmt = $conn->prepare("SELECT DISTINCT size FROM inventory WHERE product_id = ? AND quantity > 0");
+                    $sizesStmt->bind_param("i", $productId);
+                    $sizesStmt->execute();
+                    $sizesResult = $sizesStmt->get_result();
+
+                    $sizes = [];
+                    while ($sizeRow = $sizesResult->fetch_assoc()) {
+                        $sizes[] = $sizeRow['size'];
+                    }
+                    $sizesStmt->close();
+
                     $stmt = $conn->prepare("SELECT * FROM products WHERE product_id = ?");
                     $stmt->bind_param("i", $productId);
                     $stmt->execute();
                     $result = $stmt->get_result();
 
+
+
                     if ($product = $result->fetch_assoc()) {
-                        echo "<h1>" . htmlspecialchars($product['product_name']) . "</h1><br>";
-                        echo "<p>Product ID: " . htmlspecialchars($product['product_id']) . "</p>";
-                        echo "<p>Category: " . htmlspecialchars($product['category']) . "</p>";
-                        echo "<h3>Price: $" . htmlspecialchars($product['price']) . "</h3><br>";
-                        echo "<form action='add-to-cart.php' method='post'>";
+                        echo "<h1>" . htmlspecialchars($product['product_name']) . "</h1>";
+                        // Wishlist button - different behavior based on login status
+                        if ($isLoggedIn) {
+                            echo "<button style='background: transparent; border: none;' id='addToWishlist' onclick='toggleWishlist(this, " . $productId . ", " . $_SESSION['customer_id'] . ")'>";
+                            if ($isInWishlist) {
+                                echo "<p>Add to Wishlist <i class='fas fa-heart' style='font-size: 20px;'></i></p>"; // filled heart
+                            } else {
+                                echo "<p>Add to Wishlist <i class='far fa-heart' style='font-size: 20px;'></i></p>"; // empty heart
+                            }
+                            echo "</button>";
+                        } else {
+                            // For non-logged-in users, redirect to login page
+                            echo "<button style='background: transparent; border: none;' id='addToWishlist' onclick='window.location.href=\"login.php\"'>";
+                            echo "<p>Add to Wishlist <i class='far fa-heart' style='font-size: 20px;'></i></p>"; // empty heart
+                            echo "</button>";
+                        }
+
+                    }
+                    echo "<h2>$" . htmlspecialchars($product['price']) . "</h2><br>";
+                    echo "<p>Category: " . htmlspecialchars($product['category']) . "</p>";
+
+                    if (!empty($sizes)) {
+                        // Check if the product has actual sizes or a 'None' placeholder
+                        if ($sizes[0] != 'None') {
+                            echo "<p style='margin-bottom: 10px;'>Select Size: </p>";
+                            foreach ($sizes as $size) {
+                                echo "<button style='margin:1px;' type='button' class='size-btn' onclick='selectSize(this, \"$size\")'>$size</button> ";
+                            }
+                        } else {
+                            // For products that don't have size variations
+                            echo "<input style='width:70px; text-align:center;' disabled id='selectedSize' name='selectedSize' value='None'>";
+                        }
+
+                        echo "<form id='addToCartForm' action='add-to-cart.php' method='post'>";
                         echo "<input type='hidden' name='product_id' value='" . $product['product_id'] . "'>";
-                        echo "<label for='quantity'>Quantity: </label>";
-                        echo "<input style='margin-left:20px; width: 60px;' type='number' id='quantity' name='quantity' value='1' min='1'><br><br><br>";
-                        echo "<button type='submit'>Add to Cart</button>";
+                        echo "<input type='hidden' id='selectedSize' name='selectedSize' value=''>";
+                        echo "<br><label for='quantity'>Quantity: </label>";
+                        echo "<input style='margin-left:20px; width: 60px;' type='number' id='quantity' name='quantity' value='1' min='1'><br><br>";
+                        echo "<button class='btn btn-primary' type='submit' id='addToCartButton'>Add to Cart</button>";
                         echo "</form>";
                     } else {
-                        echo "<p>Product not found.</p>";
+                        // Product is out of stock
+                        echo "<h5><strong>Product is out of Stock.</strong></h5>";
                     }
 
-                    $stmt->close();
                 } else {
-                    echo "<p>No product specified.</p>";
+                    echo "<p>Product not found.</p>";
                 }
+
+                $stmt->close();
+
 
                 $conn->close();
                 ?>
@@ -172,7 +273,6 @@
     </div>
     <br>
     <br>
-
 
     <!-- Footer -->
     <footer class="mt-auto">
@@ -187,10 +287,11 @@
                 <div class="col-md-3">
                     <a href="#" id="privacyTermsModalTrigger">Privacy and Terms</a>
                 </div>
-                <div class="col-md-3">
-                    <a href="https://www.instagram.com/" target=" _blank"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.facebook.com/" target=" _blank"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://twitter.com/" target=" _blank"><i class="fab fa-twitter"></i></a>
+
+                <div id="socialIcons" style="display: flex; justify-content: center; gap:25px;" class="col-md-3">
+                    <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
                 </div>
             </div>
         </div>
@@ -288,6 +389,29 @@
             $('#myModal').modal('hide');
         }
     </script>
+
+    <script>
+        function toggleWishlist(element, productId, customerId) {
+            let icon = element.querySelector('i');
+            let action = icon.classList.contains('far') ? 'add' : 'remove';
+
+            // Toggle the icon
+            icon.classList.toggle('far');
+            icon.classList.toggle('fas');
+
+            // Send AJAX request to update wishlist
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "update-wishlist.php", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function () {
+                if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                    console.log("Wishlist updated");
+                    // Additional logic upon successful update
+                }
+            }
+            xhr.send("productId=" + productId + "&action=" + action + "&customerId=" + customerId);
+        }
+    </script>
     <script>
 
         function addToCart(productId, price) {
@@ -305,7 +429,34 @@
             alert('Product added successfully!'); window.location.href = 'homepage.php';
             console.log("Cart:", cart); // For debugging
         }
+
+        function addToWishlist(productId) {
+
+            alert('Added to wishlist!');
+        }
     </script>
+
+    <script>
+        let selectedSize = '';
+
+        function selectSize(element, size) {
+            document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedSize = size;
+            document.getElementById('selectedSize').value = size;
+        }
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementById('addToCartForm').addEventListener('submit', function (e) {
+                let sizeInput = document.getElementById('selectedSize').value;
+                if (sizeInput !== 'None' && !selectedSize) {
+                    alert('Please select a size before adding to cart.');
+                    e.preventDefault(); // Prevent form submission
+                }
+            });
+        });
+    </script>
+
 </body>
 
 </html>

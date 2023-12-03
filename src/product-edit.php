@@ -5,7 +5,8 @@ require_once 'conn.php';
 $inventory_id = $_GET['inventory_id'] ?? 0;
 
 $conn = new mysqli($hn, $un, $pw, $db);
-if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
+if ($conn->connect_error)
+    die("Connection failed: " . $conn->connect_error);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $inventory_id) {
     $product_id = $conn->real_escape_string($_POST['product_id']);
@@ -83,6 +84,7 @@ $conn->close();
 
 <body class="d-flex flex-column min-vh-100">
 
+
     <header>
         <nav class="navbar navbar-expand-lg navbar-light ">
             <div class="container-fluid">
@@ -107,6 +109,12 @@ $conn->close();
                             <img src="https://cdn-icons-png.flaticon.com/128/64/64572.png" width="30px" height="30px">
                         </a>
                     </li>
+                    <li id="wishlistIcon" class="nav-item">
+                        <a class="nav-link" href="wishlist.php">
+                            <img src="https://cdn-icons-png.flaticon.com/128/4240/4240564.png" width="30px"
+                                height="30px">
+                        </a>
+                    </li>
                     <li id="cartIcon" class="nav-item">
                         <a class="nav-link" href="cart.php">
                             <img src="https://cdn-icons-png.flaticon.com/128/253/253298.png" width="30px" height="30px">
@@ -115,38 +123,61 @@ $conn->close();
                 </ul>
             </div>
         </nav>
+        <!-- Second Navbar for Categories -->
+        <nav id="categories" class="navbar navbar-expand-lg navbar-light " style="background-color: ghostwhite;">
+            <ul id="global-main-menu" class="nav navbar-nav navbar-collapse collapse"
+                style="justify-content: center;flex-wrap:nowrap; gap: 30px;">
+                <!-- Categories as list items -->
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=men"><strong>Men</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=women"><strong>Women</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=headwear"><strong>Headwear</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=footwear"><strong>Footwear</strong></a>
+                </li>
+            </ul>
+        </nav>
     </header>
 
-	<div class="container">
-		<br><br>
-			<h2 class="text-center">Edit Product Details</h2>
-			<div class="registration-form">
-				<form action="product-edit.php?inventory_id=<?php echo $inventory_id; ?>" method="post">
-					<div class="form-group">
-						<label for="product_id">Product ID:</label>
-						<input type="text" class="form-control" id="product_id" name="product_id" value="<?php echo htmlspecialchars($product['product_id'] ?? ''); ?>" readonly>
-					</div>
 
-					<div class="form-group">
-						<label for="vendor_id">Vendor ID:</label>
-						<input type="text" class="form-control" id="vendor_id" name="vendor_id" value="<?php echo htmlspecialchars($product['vendor_id'] ?? ''); ?>" readonly>
-					</div>
+    <div class="container">
+        <br><br>
+        <h2 class="text-center">Edit Product Details</h2>
+        <div class="registration-form">
+            <form action="product-edit.php?inventory_id=<?php echo $inventory_id; ?>" method="post">
+                <div class="form-group">
+                    <label for="product_id">Product ID:</label>
+                    <input type="text" class="form-control" id="product_id" name="product_id"
+                        value="<?php echo htmlspecialchars($product['product_id'] ?? ''); ?>" readonly>
+                </div>
 
-					<div class="form-group">
-						<label for="quantity">Quantity:</label>
-						<input type="number" class="form-control" id="quantity" name="quantity" value="<?php echo htmlspecialchars($product['quantity'] ?? ''); ?>" required>
-					</div>
+                <div class="form-group">
+                    <label for="vendor_id">Vendor ID:</label>
+                    <input type="text" class="form-control" id="vendor_id" name="vendor_id"
+                        value="<?php echo htmlspecialchars($product['vendor_id'] ?? ''); ?>" readonly>
+                </div>
 
-					<div class="form-group">
-						<label for="inventory_date">Inventory Date:</label>
-						<input type="date" class="form-control" id="inventory_date" name="inventory_date" value="<?php echo htmlspecialchars($product['inventory_date'] ?? ''); ?>" required>
-					</div>
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity"
+                        value="<?php echo htmlspecialchars($product['quantity'] ?? ''); ?>" required>
+                </div>
 
-					<button type="submit" class="btn btn-primary">Update</button>
-				</form>
-			</div>
-		</div>
+                <div class="form-group">
+                    <label for="inventory_date">Inventory Date:</label>
+                    <input type="date" class="form-control" id="inventory_date" name="inventory_date"
+                        value="<?php echo htmlspecialchars($product['inventory_date'] ?? ''); ?>" required>
+                </div>
 
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="mt-auto">
@@ -161,10 +192,11 @@ $conn->close();
                 <div class="col-md-3">
                     <a href="#" id="privacyTermsModalTrigger">Privacy and Terms</a>
                 </div>
-                <div class="col-md-3">
-                    <a href="https://www.instagram.com/" target=" _blank"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.facebook.com/" target=" _blank"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://twitter.com/" target=" _blank"><i class="fab fa-twitter"></i></a>
+
+                <div id="socialIcons" style="display: flex; justify-content: center; gap:25px;" class="col-md-3">
+                    <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
                 </div>
             </div>
         </div>

@@ -48,8 +48,6 @@ $quantities = explode(',', $lineItem['quantity']);
 
 ?>
 
-
-
 <!DOCTYPE html>
 <html>
 
@@ -203,6 +201,7 @@ $quantities = explode(',', $lineItem['quantity']);
 <body class="d-flex flex-column min-vh-100">
 
 
+
     <header>
         <nav class="navbar navbar-expand-lg navbar-light ">
             <div class="container-fluid">
@@ -227,6 +226,12 @@ $quantities = explode(',', $lineItem['quantity']);
                             <img src="https://cdn-icons-png.flaticon.com/128/64/64572.png" width="30px" height="30px">
                         </a>
                     </li>
+                    <li id="wishlistIcon" class="nav-item">
+                        <a class="nav-link" href="wishlist.php">
+                            <img src="https://cdn-icons-png.flaticon.com/128/4240/4240564.png" width="30px"
+                                height="30px">
+                        </a>
+                    </li>
                     <li id="cartIcon" class="nav-item">
                         <a class="nav-link" href="cart.php">
                             <img src="https://cdn-icons-png.flaticon.com/128/253/253298.png" width="30px" height="30px">
@@ -234,6 +239,25 @@ $quantities = explode(',', $lineItem['quantity']);
                     </li>
                 </ul>
             </div>
+        </nav>
+        <!-- Second Navbar for Categories -->
+        <nav id="categories" class="navbar navbar-expand-lg navbar-light " style="background-color: ghostwhite;">
+            <ul id="global-main-menu" class="nav navbar-nav navbar-collapse collapse"
+                style="justify-content: center;flex-wrap:nowrap; gap: 30px;">
+                <!-- Categories as list items -->
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=men"><strong>Men</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=women"><strong>Women</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=headwear"><strong>Headwear</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=footwear"><strong>Footwear</strong></a>
+                </li>
+            </ul>
         </nav>
     </header>
 
@@ -251,7 +275,7 @@ $quantities = explode(',', $lineItem['quantity']);
         </div>
 
         <div class="details-container">
-            <div class="customer-details">
+            <div class="customer-details" style="text-align:left;">
                 <h4>Customer Details:</h4>
                 <p>Name:
                     <?php echo htmlspecialchars($customer['first_name'] . ' ' . $customer['last_name']); ?>
@@ -269,44 +293,46 @@ $quantities = explode(',', $lineItem['quantity']);
                     <?php echo htmlspecialchars($customer['billing_address']); ?>
                 </p>
             </div>
-            <div class="order-details">
-                <h4>Order ID:
-                    <?php echo htmlspecialchars($orderId); ?>
-                </h4>
-                <p>Date:
-                    <?php echo htmlspecialchars($order['order_date']); ?>
-                </p>
-                <table>
-                    <tr>
-                        <th>Product Name</th>
-                        <th>Quantity</th>
-                        <th>Price per Item</th>
-                        <th>Total Amount</th>
-                    </tr>
-                    <?php
-                    foreach ($productIds as $index => $productId) {
-                        $productQuery = $conn->prepare("SELECT product_name, price FROM products WHERE product_id = ?");
-                        $productQuery->bind_param("i", $productId);
-                        $productQuery->execute();
-                        $productResult = $productQuery->get_result();
-                        if ($product = $productResult->fetch_assoc()) {
-                            $quantity = $quantities[$index];
-                            $totalAmount = $quantity * $product['price'];
-                            echo "<tr>";
-                            echo "<td>" . htmlspecialchars($product['product_name']) . "</td>";
-                            echo "<td>" . htmlspecialchars($quantity) . "</td>";
-                            echo "<td>$" . htmlspecialchars(number_format($product['price'], 2)) . "</td>";
-                            echo "<td>$" . htmlspecialchars(number_format($totalAmount, 2)) . "</td>";
-                            echo "</tr>";
-                        }
+            <div class="order-details" style="text-align:left;">
+                <?php
+                // Fetch orderline details with product names and sizes
+                $lineItemsQuery = $conn->prepare("
+        SELECT ol.product_id, ol.quantity, ol.size, p.product_name, p.price
+        FROM orderline ol
+        INNER JOIN products p ON ol.product_id = p.product_id
+        WHERE ol.order_id = ?
+    ");
+                $lineItemsQuery->bind_param("i", $orderId);
+                $lineItemsQuery->execute();
+                $lineItemsResult = $lineItemsQuery->get_result();
+
+                if ($lineItemsResult->num_rows > 0) {
+                    echo "<table id='orderTable'>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Size</th>
+                    <th>Quantity</th>
+                    <th>Price per Item</th>
+                    <th>Total Amount</th>
+                </tr>";
+
+                    while ($item = $lineItemsResult->fetch_assoc()) {
+                        $totalAmount = $item['quantity'] * $item['price'];
+                        echo "<tr data-product-id='" . $item['product_id'] . "'>";
+                        echo "<td>" . htmlspecialchars($item['product_name']) . "</td>";
+                        echo "<td>" . htmlspecialchars($item['size']) . "</td>"; // Display size
+                        echo "<td>" . htmlspecialchars($item['quantity']) . "</td>";
+                        echo "<td>$" . htmlspecialchars(number_format($item['price'], 2)) . "</td>";
+                        echo "<td>$" . htmlspecialchars(number_format($totalAmount, 2)) . "</td>";
+                        echo "</tr>";
                     }
 
-                    ?>
-                </table>
-                <br>
-                <p>Total Order Amount: $
-                    <?php echo htmlspecialchars(number_format($order['total_amount'], 2)); ?>
-                </p>
+                    echo "</table><br>";
+                    echo "<p><strong>Total Order Amount: $" . htmlspecialchars(number_format($order['total_amount'], 2)) . "</strong></p>";
+                } else {
+                    echo "<p>Order details not found.</p>";
+                }
+                ?>
             </div>
         </div>
         <br>
@@ -331,10 +357,11 @@ $quantities = explode(',', $lineItem['quantity']);
                 <div class="col-md-3">
                     <a href="#" id="privacyTermsModalTrigger">Privacy and Terms</a>
                 </div>
-                <div class="col-md-3">
-                    <a href="https://www.instagram.com/" target=" _blank"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.facebook.com/" target=" _blank"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://twitter.com/" target=" _blank"><i class="fab fa-twitter"></i></a>
+
+                <div id="socialIcons" style="display: flex; justify-content: center; gap:25px;" class="col-md-3">
+                    <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
                 </div>
             </div>
         </div>
@@ -342,6 +369,7 @@ $quantities = explode(',', $lineItem['quantity']);
             <a tabindex="0" style="color: red;">Copyright 2023 © Suburban Outfitters </a>
         </div>
     </footer>
+
 
     <!-- Modal for Contact Us -->
     <div class="modal fade" id="contactUsModal" tabindex="-1" role="dialog" aria-labelledby="contactUsModalLabel"
@@ -445,6 +473,8 @@ $quantities = explode(',', $lineItem['quantity']);
             window.print();
         });
     </script>
+
+
 </body>
 
 </html>

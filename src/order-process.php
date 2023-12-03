@@ -3,7 +3,6 @@
 require_once 'checksession.php';
 require_once 'conn.php';
 
-
 // Check if the user's email is in the admin table
 $currentUserEmail = $_SESSION['email'] ?? null;
 
@@ -22,12 +21,9 @@ if ($currentUserEmail) {
         header("Location: unauthorized.php");
         exit;
     } else {
-
         $row = $result->fetch_assoc();
         $adminId = $row['admin_id'];
     }
-
-
 
     $adminCheckStmt->close();
 } else {
@@ -40,16 +36,17 @@ $_SESSION['admin_id'] = $adminId;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ordersToProcess'])) {
     foreach ($_POST['ordersToProcess'] as $orderId) {
-        $stmt = $conn->prepare("UPDATE orders SET admin_id = ? WHERE order_id = ?");
-        $stmt->bind_param("ii", $adminId, $orderId);
-        $stmt->execute();
+        $updateStmt = $conn->prepare("UPDATE orders SET admin_id = ?, status = 'Processed' WHERE order_id = ?");
+        $updateStmt->bind_param("ii", $adminId, $orderId);
+        $updateStmt->execute();
     }
 
-    $stmt->close();
+    $updateStmt->close();
     $conn->close();
-    echo "<script>alert('Orders assigned successfully!'); window.location.href='profile.php';</script>";
+    echo "<script>alert('Orders processed and assigned successfully!'); window.location.href='profile.php';</script>";
 }
 ?>
+
 
 
 <!DOCTYPE html>
@@ -58,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ordersToProcess'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Processing</title>
+    <title>Order Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="stylesheets/style.css">
@@ -104,6 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ordersToProcess'])) {
 </head>
 
 <body class="d-flex flex-column min-vh-100">
+
     <header>
         <nav class="navbar navbar-expand-lg navbar-light ">
             <div class="container-fluid">
@@ -128,6 +126,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ordersToProcess'])) {
                             <img src="https://cdn-icons-png.flaticon.com/128/64/64572.png" width="30px" height="30px">
                         </a>
                     </li>
+                    <li id="wishlistIcon" class="nav-item">
+                        <a class="nav-link" href="wishlist.php">
+                            <img src="https://cdn-icons-png.flaticon.com/128/4240/4240564.png" width="30px"
+                                height="30px">
+                        </a>
+                    </li>
                     <li id="cartIcon" class="nav-item">
                         <a class="nav-link" href="cart.php">
                             <img src="https://cdn-icons-png.flaticon.com/128/253/253298.png" width="30px" height="30px">
@@ -135,6 +139,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ordersToProcess'])) {
                     </li>
                 </ul>
             </div>
+        </nav>
+        <!-- Second Navbar for Categories -->
+        <nav id="categories" class="navbar navbar-expand-lg navbar-light " style="background-color: ghostwhite;">
+            <ul id="global-main-menu" class="nav navbar-nav navbar-collapse collapse"
+                style="justify-content: center;flex-wrap:nowrap; gap: 30px;">
+                <!-- Categories as list items -->
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=men"><strong>Men</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=women"><strong>Women</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=headwear"><strong>Headwear</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=footwear"><strong>Footwear</strong></a>
+                </li>
+            </ul>
         </nav>
     </header>
 
@@ -182,7 +205,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ordersToProcess'])) {
     $conn->close();
     ?>
 
-
     <br>
     <br>
     </div>
@@ -200,10 +222,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ordersToProcess'])) {
                 <div class="col-md-3">
                     <a href="#" id="privacyTermsModalTrigger">Privacy and Terms</a>
                 </div>
-                <div class="col-md-3">
-                    <a href="https://www.instagram.com/" target=" _blank"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.facebook.com/" target=" _blank"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://twitter.com/" target=" _blank"><i class="fab fa-twitter"></i></a>
+
+                <div id="socialIcons" style="display: flex; justify-content: center; gap:25px;" class="col-md-3">
+                    <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
                 </div>
             </div>
         </div>

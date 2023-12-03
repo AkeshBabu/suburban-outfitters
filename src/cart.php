@@ -1,6 +1,10 @@
 <?php
 session_start();
+
+// Check if customer is logged in
+$loggedIn = isset($_SESSION['customer_id']);
 ?>
+
 
 
 <!DOCTYPE html>
@@ -133,6 +137,12 @@ session_start();
                             <img src="https://cdn-icons-png.flaticon.com/128/64/64572.png" width="30px" height="30px">
                         </a>
                     </li>
+                    <li id="wishlistIcon" class="nav-item">
+                        <a class="nav-link" href="wishlist.php">
+                            <img src="https://cdn-icons-png.flaticon.com/128/4240/4240564.png" width="30px"
+                                height="30px">
+                        </a>
+                    </li>
                     <li id="cartIcon" class="nav-item">
                         <a class="nav-link" href="cart.php">
                             <img src="https://cdn-icons-png.flaticon.com/128/253/253298.png" width="30px" height="30px">
@@ -141,58 +151,118 @@ session_start();
                 </ul>
             </div>
         </nav>
+        <!-- Second Navbar for Categories -->
+        <nav id="categories" class="navbar navbar-expand-lg navbar-light " style="background-color: ghostwhite;">
+            <ul id="global-main-menu" class="nav navbar-nav navbar-collapse collapse"
+                style="justify-content: center;flex-wrap:nowrap; gap: 30px;">
+                <!-- Categories as list items -->
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=men"><strong>Men</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=women"><strong>Women</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=headwear"><strong>Headwear</strong></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view-products.php?category=footwear"><strong>Footwear</strong></a>
+                </li>
+            </ul>
+        </nav>
     </header>
+
 
     <br>
     <br>
 
     <div class="container">
         <h2 style="text-align: center;">Your Shopping Cart</h2>
+        <a style="position:relative; top:-25px; color:red; " href="view-products.php">Continue Shopping</a>
         <br><br>
-        <table class="cart-table" id="cart-container">
+
+        <?php
+        require_once 'conn.php';
+
+        $conn = new mysqli($hn, $un, $pw, $db);
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        $totalAmount = 0;
+        if (isset($_SESSION['cart']) && count($_SESSION['cart']) > 0) {
+            echo "<table class='cart-table' id='cart-container'>
             <tr>
                 <th>Product Name</th>
+                <th>Size</th>
                 <th>Quantity</th>
+                <th>Price Per Item</th>
                 <th>Total</th>
-                <th>Actions</th>
-            </tr>
-            <?php
-            $totalAmount = 0;
-            if (isset($_SESSION['cart']) && count($_SESSION['cart']) > 0) {
-                foreach ($_SESSION['cart'] as $productId => $productDetails) {
-                    $lineTotal = $productDetails['quantity'] * $productDetails['price'];
-                    $totalAmount += $lineTotal;
+                <th>Action</th>
+            </tr>";
 
-                    echo "<tr>
-                        <td>" . htmlspecialchars($productDetails['name']) . "</td>
-                        <td>
-                            <input type='number' value='" . htmlspecialchars($productDetails['quantity']) . "' min='1' onchange='updateQuantity(\"$productId\", this.value)'>
-                        </td>
-                        <td id='total-$productId'>$" . number_format($lineTotal, 2) . "</td>
-                        <td>
-                            <a href='remove-from-cart.php?productId=$productId'>Remove Item</a>
-                        </td>
-                      </tr>";
+            foreach ($_SESSION['cart'] as $cartKey => $productDetails) {
+                $lineTotal = $productDetails['quantity'] * $productDetails['price'];
+                $totalAmount += $lineTotal;
+
+                // Fetch available sizes for the product
+                $sizeStmt = $conn->prepare("SELECT DISTINCT size FROM inventory WHERE product_id = ?");
+                $sizeStmt->bind_param("i", $productDetails['productId']);
+                $sizeStmt->execute();
+                $sizeResult = $sizeStmt->get_result();
+
+                $sizes = [];
+                while ($sizeRow = $sizeResult->fetch_assoc()) {
+                    $sizes[] = $sizeRow['size'];
                 }
+
+                echo "<tr>";
+                echo "<td><a style='color:black;' href='product-detail.php?productId=" . htmlspecialchars($productDetails['productId']) . "'>" . htmlspecialchars($productDetails['name']) . "</a></td>";
+                echo "<td>";
+                // Size dropdown
+        
+                echo "<select onchange='updateSize(\"$cartKey\", this.value)'>";
+                echo "<option value='' disabled selected>Select Size</option>"; // Default option
+                foreach ($sizes as $size) {
+                    $selected = $size === $productDetails['size'] ? 'selected' : '';
+                    echo "<option value='$size' $selected>$size</option>";
+                }
+                echo "</select>";
+                echo "</td>";
+                echo "<td><input type='number' value='" . htmlspecialchars($productDetails['quantity']) . "' min='1' onchange='updateQuantity(\"$cartKey\", this.value)'></td>";
+                echo "<td>$" . htmlspecialchars(number_format($productDetails['price'], 2)) . "</td>";
+                echo "<td id='total-$cartKey'>$" . number_format($lineTotal, 2) . "</td>";
+                echo "<td><a style='color:red;' href='remove-from-cart.php?cartKey=$cartKey'>Remove</a></td>";
+                echo "</tr>";
+            }
+
+            echo "</table>";
+        } else {
+            echo "<p>Your cart is empty</p>";
+        }
+
+        echo "<br><div style='direction: rtl;'><h5><strong>Total Order Amount: $" . number_format($totalAmount, 2) . "</strong></h5></div>";
+
+        ?>
+
+
+        <br>
+        <br>
+
+        <form action="checkout.php" method="post" style="direction:rtl" onsubmit="return validateSizesBeforeCheckout()">
+            <?php
+            $isCartEmpty = !isset($_SESSION['cart']) || count($_SESSION['cart']) == 0;
+            if ($isCartEmpty) {
+                echo "<button class='btn btn-primary'  style='position: relative; top: -20px;' type='submit' disabled>Proceed to Checkout</button>";
             } else {
-                echo "<tr><td colspan='4'>Your cart is empty</td></tr>";
+                echo "<button class='btn btn-primary' style=' position: relative; top: -20px;' type='submit'>Proceed to Checkout</button>";
             }
             ?>
-            <tr>
-                <td colspan="3">Total Order Amount:</td>
-                <td id="total-amount">$
-                    <?php echo number_format($totalAmount, 2); ?>
-                </td>
-            </tr>
-        </table>
-        <br>
-        <br>
-        <a class="btn btn-primary" href="view-products.php">Continue Shopping</a>
-        <form action="checkout.php" method="post" style="direction: rtl;">
-            <button class='btn btn-primary' type="submit">Proceed to Checkout</button>
+
         </form>
 
     </div>
+
     <br>
     <br>
 
@@ -209,10 +279,11 @@ session_start();
                 <div class="col-md-3">
                     <a href="#" id="privacyTermsModalTrigger">Privacy and Terms</a>
                 </div>
-                <div class="col-md-3">
-                    <a href="https://www.instagram.com/" target=" _blank"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.facebook.com/" target=" _blank"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://twitter.com/" target=" _blank"><i class="fab fa-twitter"></i></a>
+
+                <div id="socialIcons" style="display: flex; justify-content: center; gap:25px;" class="col-md-3">
+                    <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
                 </div>
             </div>
         </div>
@@ -335,6 +406,42 @@ session_start();
                     }
                 })
                 .catch(error => console.error('Error:', error));
+        }
+
+
+    </script>
+
+    <script>
+        function validateSizesBeforeCheckout() {
+            var selects = document.querySelectorAll('select');
+            for (var i = 0; i < selects.length; i++) {
+                if (selects[i].value === 'Select Size') {
+                    alert('Please select the size for all products before proceeding to checkout.');
+                    return false;
+                }
+            }
+            <?php if (!$loggedIn): ?>
+                // If not logged in, redirect to login page
+                window.location.href = 'login.php?redirect=cart.php';
+                return false;
+            <?php endif; ?>
+
+            // If logged in, allow the form to submit
+            return true;
+        }
+    </script>
+
+    <script>
+        function updateSize(productId, newSize) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "update-cart-size.php", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function () {
+                if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                    console.log("Cart updated with new size");
+                }
+            }
+            xhr.send("productId=" + productId + "&newSize=" + newSize);
         }
     </script>
 </body>

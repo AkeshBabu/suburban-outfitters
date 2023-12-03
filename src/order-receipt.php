@@ -268,10 +268,6 @@ $quantities = explode(',', $lineItem['quantity']);
         <div class="receipt-header">
             <div style=" text-align: center; position: relative; left: 360px;">
                 <h2>Order Receipt</h2>
-                <br>
-                <h5>Order ID:
-                    <?php echo htmlspecialchars($order['order_id']); ?>
-                </h5>
             </div>
             <div class="logo-container" style=" position: relative; left: -50px;">
                 <img src="images/logo.jpg" alt="Logo">

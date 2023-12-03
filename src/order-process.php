@@ -176,14 +176,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['ordersToProcess'])) {
             <div class='order-process'>
                 <form action='order-process.php' method='post'>
                     <table class='table table-bordered'>
-                        <thead><tr><th>Order ID</th><th>Order Receipt</th><th>Date</th><th>Status</th><th>Assign</th></tr></thead>
+                        <thead><tr><th>Order ID</th><th>Date</th><th>Status</th><th>Assign</th></tr></thead>
                         <tbody>";
 
     while ($order = $result->fetch_assoc()) {
         $disabled = $order['admin_id'] ? "disabled checked" : ""; // Check if order is already assigned to an admin
         echo "<tr>
                                     <td>" . $order['order_id'] . "</td>
-                                    <td><a href='order-receipt.php?orderId=" . $order['order_id'] . "'>View Receipt</a></td>
                                     <td>" . $order['order_date'] . "</td>
                                     <td>" . $order['status'] . "</td>
                                     <td><input type='checkbox' name='ordersToProcess[]' value='" . $order['order_id'] . "' $disabled></td>

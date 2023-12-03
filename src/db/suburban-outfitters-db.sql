@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 03, 2023 at 08:36 AM
+-- Generation Time: Dec 03, 2023 at 08:59 PM
 -- Server version: 8.0.31
 -- PHP Version: 8.2.0
 
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `admin` (
   `email` varchar(100) NOT NULL,
   `phone` varchar(12) NOT NULL,
   PRIMARY KEY (`admin_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `admin`
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `customer` (
   `billing_address` varchar(150) NOT NULL,
   PRIMARY KEY (`customer_id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=MyISAM AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `customer`
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS `inventory` (
   PRIMARY KEY (`inventory_id`),
   KEY `product_id` (`product_id`),
   KEY `vendor_id` (`vendor_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=167 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=170 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `inventory`
@@ -111,8 +111,9 @@ INSERT INTO `inventory` (`inventory_id`, `product_id`, `vendor_id`, `quantity`, 
 (32, 2, 102, 45, '2023-02-10', 'xl'),
 (33, 2, 102, 55, '2023-02-10', '2xl'),
 (34, 2, 102, 60, '2023-02-10', '3xl'),
-(36, 9, 101, 44, '2023-06-12', 'None'),
-(37, 17, 103, 57, '2023-08-09', 'None'),
+(167, 51, 112, -2, '2023-12-03', 'md'),
+(36, 9, 101, 42, '2023-06-12', 'None'),
+(37, 17, 103, 55, '2023-08-09', 'None'),
 (38, 3, 101, 12, '2023-03-20', 'xs'),
 (39, 3, 101, 3, '2023-03-20', 'sm'),
 (40, 3, 101, -5, '2023-03-20', 'md'),
@@ -122,16 +123,16 @@ INSERT INTO `inventory` (`inventory_id`, `product_id`, `vendor_id`, `quantity`, 
 (44, 3, 101, 2, '2023-03-20', '3xl'),
 (45, 4, 104, 40, '2023-04-25', 'xs'),
 (46, 4, 104, 25, '2023-04-25', 'sm'),
-(47, 4, 104, 40, '2023-04-25', 'md'),
-(48, 4, 104, 52, '2023-04-25', 'lg'),
+(47, 4, 104, 37, '2023-04-25', 'md'),
+(48, 4, 104, 50, '2023-04-25', 'lg'),
 (49, 4, 104, 13, '2023-04-25', 'xl'),
 (50, 4, 104, 19, '2023-04-25', '2xl'),
 (51, 4, 104, 14, '2023-04-25', '3xl'),
 (52, 6, 101, 18, '2023-06-06', 'xs'),
 (53, 6, 101, 19, '2023-06-06', 'sm'),
 (54, 6, 101, 24, '2023-06-06', 'md'),
-(55, 6, 101, 27, '2023-06-06', 'lg'),
-(56, 6, 101, 27, '2023-06-06', 'xl'),
+(55, 6, 101, 25, '2023-06-06', 'lg'),
+(56, 6, 101, 24, '2023-06-06', 'xl'),
 (57, 6, 101, 32, '2023-06-06', '2xl'),
 (58, 6, 101, 30, '2023-06-06', '3xl'),
 (59, 7, 107, 32, '2023-07-07', 'xs'),
@@ -170,9 +171,9 @@ INSERT INTO `inventory` (`inventory_id`, `product_id`, `vendor_id`, `quantity`, 
 (92, 12, 112, 24, '2023-12-12', '2xl'),
 (93, 12, 112, 24, '2023-12-12', '3xl'),
 (94, 13, 111, 26, '2023-01-13', 'xs'),
-(95, 13, 111, 26, '2023-01-13', 'sm'),
+(95, 13, 111, 23, '2023-01-13', 'sm'),
 (96, 13, 111, 25, '2023-01-13', 'md'),
-(97, 13, 111, 23, '2023-01-13', 'lg'),
+(97, 13, 111, 20, '2023-01-13', 'lg'),
 (98, 13, 111, 26, '2023-01-13', 'xl'),
 (99, 13, 111, 26, '2023-01-13', '2xl'),
 (100, 13, 111, 26, '2023-01-13', '3xl'),
@@ -224,12 +225,13 @@ INSERT INTO `inventory` (`inventory_id`, `product_id`, `vendor_id`, `quantity`, 
 (148, 25, 12, 10, '2023-11-28', 'xs'),
 (149, 27, 22, 22, '2023-11-30', 'lg'),
 (153, 43, 2, 12, '0001-12-13', 'None'),
-(165, 49, 114, 100, '2023-12-02', 'None'),
+(168, 52, 112, 40, '2023-12-03', 'md'),
 (156, 22, 111, 33, '2023-12-02', 'None'),
-(157, 21, 111, 30, '2023-12-02', 'None'),
+(157, 21, 111, 28, '2023-12-02', 'None'),
 (158, 24, 111, 37, '2023-12-02', 'None'),
 (159, 25, 111, 38, '2023-12-02', 'None'),
-(162, 5, 111, 93, '2023-12-02', 'None');
+(162, 5, 111, 93, '2023-12-02', 'None'),
+(169, 53, 112, 150, '2023-12-03', 'md');
 
 -- --------------------------------------------------------
 
@@ -246,7 +248,7 @@ CREATE TABLE IF NOT EXISTS `orderline` (
   `total_amount` double(10,2) NOT NULL,
   `size` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`line_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=155 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=167 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `orderline`
@@ -285,7 +287,19 @@ INSERT INTO `orderline` (`line_id`, `order_id`, `product_id`, `quantity`, `total
 (151, 105, '2', '2', 120.00, 'lg'),
 (152, 106, '2', '2', 120.00, 'lg'),
 (153, 107, '6', '2', 260.00, 'xl'),
-(154, 108, '16', '2', 240.00, 'lg');
+(154, 108, '16', '2', 240.00, 'lg'),
+(155, 109, '51', '52', 4160.00, 'md'),
+(156, 110, '6', '3', 390.00, 'xl'),
+(157, 110, '6', '2', 260.00, 'lg'),
+(158, 110, '9', '2', 60.00, 'None'),
+(159, 111, '4', '2', 120.00, 'lg'),
+(160, 112, '4', '3', 180.00, 'md'),
+(161, 112, '21', '2', 500.00, 'None'),
+(162, 113, '52', '100', 10000.00, 'md'),
+(163, 114, '13', '3', 420.00, 'lg'),
+(164, 114, '13', '3', 420.00, 'sm'),
+(165, 114, '17', '2', 40.00, 'None'),
+(166, 115, '53', '100', 10000.00, 'md');
 
 -- --------------------------------------------------------
 
@@ -302,7 +316,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `total_amount` double(10,2) NOT NULL,
   `status` varchar(50) NOT NULL,
   PRIMARY KEY (`order_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=109 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=116 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `orders`
@@ -329,7 +343,13 @@ INSERT INTO `orders` (`order_id`, `customer_id`, `admin_id`, `order_date`, `tota
 (91, 35, 0, '2023-12-03', 1200.00, 'Placed'),
 (90, 34, 14, '2023-12-03', 1050.00, 'Processed'),
 (89, 34, 0, '2023-12-03', 3000.00, 'Placed'),
-(88, 34, 14, '2023-12-03', 300.00, 'Processed');
+(88, 34, 14, '2023-12-03', 300.00, 'Processed'),
+(109, 34, 14, '2023-12-03', 4160.00, 'Processed'),
+(111, 39, 0, '2023-12-03', 120.00, 'Placed'),
+(112, 40, 14, '2023-12-03', 680.00, 'Processed'),
+(113, 34, 0, '2023-12-03', 10000.00, 'Placed'),
+(114, 35, 14, '2023-12-03', 880.00, 'Processed'),
+(115, 34, 0, '2023-12-03', 10000.00, 'Placed');
 
 -- --------------------------------------------------------
 
@@ -345,7 +365,7 @@ CREATE TABLE IF NOT EXISTS `products` (
   `price` double(10,2) NOT NULL,
   `category` varchar(150) NOT NULL,
   PRIMARY KEY (`product_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `products`
@@ -377,7 +397,8 @@ INSERT INTO `products` (`product_id`, `admin_id`, `product_name`, `price`, `cate
 (21, 13, 'Unniquee Sneakers', 250.00, 'Footwear'),
 (24, 13, 'SO Formal Shoes- Men', 300.00, 'Footwear'),
 (25, 13, 'SO Formal Shoes- Women', 280.00, 'Footwear'),
-(26, 13, 'Ultimate SportZ Shoes', 380.00, 'Footwear');
+(26, 13, 'Ultimate SportZ Shoes', 380.00, 'Footwear'),
+(53, 14, 'SO Classix T-Shirt', 70.00, 'Men');
 
 -- --------------------------------------------------------
 
@@ -392,7 +413,7 @@ CREATE TABLE IF NOT EXISTS `wishlist` (
   `product_id` int NOT NULL,
   `date_added` date NOT NULL,
   PRIMARY KEY (`wishlist_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=72 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `wishlist`
@@ -421,7 +442,6 @@ INSERT INTO `wishlist` (`wishlist_id`, `customer_id`, `product_id`, `date_added`
 (57, 34, 25, '2023-12-03'),
 (58, 35, 22, '2023-12-03'),
 (59, 35, 23, '2023-12-03'),
-(60, 35, 24, '2023-12-03'),
 (61, 35, 8, '2023-12-03'),
 (62, 35, 7, '2023-12-03'),
 (63, 35, 14, '2023-12-03'),

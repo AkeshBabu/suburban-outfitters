@@ -241,8 +241,7 @@ $loggedIn = isset($_SESSION['customer_id']);
             echo "<p>Your cart is empty</p>";
         }
 
-        echo "<br><div style='direction: rtl;'><h5><strong>Total Order Amount: $" . number_format($totalAmount, 2) . "</strong></h5></div>";
-
+        echo "<br><div style='direction: rtl;'><h5><strong>Total Order Amount: $<span id='total-amount'>" . number_format($totalAmount, 2) . "</span></strong></h5></div>";
         ?>
 
 
@@ -402,7 +401,7 @@ $loggedIn = isset($_SESSION['customer_id']);
                         document.getElementById('total-' + productId).textContent = '$' + data.lineTotal;
 
                         // Update the grand total
-                        document.getElementById('total-amount').textContent = '$' + data.grandTotal;
+                        document.getElementById('total-amount').textContent = + data.grandTotal;
                     }
                 })
                 .catch(error => console.error('Error:', error));
